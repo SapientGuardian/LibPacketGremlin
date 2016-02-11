@@ -1,0 +1,119 @@
+﻿// -----------------------------------------------------------------------
+//  <copyright file="Generic.cs" company="Outbreak Labs">
+//     Copyright (c) Outbreak Labs. All rights reserved.
+//  </copyright>
+// -----------------------------------------------------------------------
+
+namespace OutbreakLabs.LibPacketGremlin.Packets
+{
+    using System;
+    using System.IO;
+    using System.Text;
+
+    using OutbreakLabs.LibPacketGremlin.Abstractions;
+
+    /// <summary>
+    ///     A generic packet for storing a blob of data
+    /// </summary>
+    public class Generic : IPacket
+    {
+        private byte[] data;
+
+        /// <summary>
+        /// Constructs a generic unstructured packet
+        /// </summary>
+        public Generic()
+        {
+            this.Data = Array.Empty<byte>();
+        }
+
+        /// <summary>
+        /// Constructs a generic unstructured packet
+        /// </summary>
+        /// <param name="data">Initial data</param>
+        public Generic(byte[] data)
+        {
+            this.Data = data;
+        }
+
+        /// <summary>
+        /// Gets or sets the data of this packet
+        /// </summary>
+        public byte[] Data
+        {
+            get
+            {
+                return this.data;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+                this.data = value;
+            }
+        }
+
+        /// <summary>
+        ///     Get the payload, if applicable
+        /// </summary>
+        public IPacket Payload => null;
+
+        /// <summary>
+        ///     Set the enclosing packet
+        /// </summary>
+        /// <param name="container">Packet that contains this one</param>
+        public void SetContainer(IPacket container)
+        {
+        }
+
+        /// <summary>
+        ///     Gets the length of the packet
+        /// </summary>
+        /// <returns>Length of the packet</returns>
+        public long Length()
+        {
+            return this.Data.Length;
+        }
+
+        /// <summary>
+        ///     Write the contents of this packet to a stream
+        /// </summary>
+        /// <param name="stream">Destination stream</param>
+        public void WriteToStream(Stream stream)
+        {
+            using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                bw.Write(this.Data);
+            }
+        }
+
+        /// <summary>
+        ///     Correct fields such as checksums. Recursive.
+        /// </summary>
+        public void CorrectFields()
+        {
+        }
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="data">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        public static bool TryParse(byte[] data, out Generic packet)
+        {
+            try
+            {
+                packet = new Generic(data);
+                return true;
+            }
+            catch (Exception)
+            {
+                packet = null;
+                return false;
+            }
+        }
+    }
+}
