@@ -3,7 +3,7 @@
   "description": "Library for manipulating packets",
   "authors": [ "Noah Potash" ],
   "tags": [ "packet", "packets" ],
-  "projectUrl": "http://www.outbreaklabs.com",
+  "projectUrl": "https://github.com/SapientGuardian/LibPacketGremlin",
   "licenseUrl": "http://opensource.org/licenses/MIT",
   "frameworks": {
     "net46": { },

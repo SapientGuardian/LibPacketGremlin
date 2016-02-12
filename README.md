@@ -12,6 +12,7 @@ LibPacketGremlin is being excised from its original codebase iteratively. The fi
 * Ethernet II
 * IPv4
 * UDP
+* ARP
 
 Not yet ported...
 
@@ -19,7 +20,6 @@ Not yet ported...
 * WakeOnLan
 * ICMP
 * IEEE 802.1x
-* ARP
 * IEEE 802.11
 * LLC
 * MSMon 802.11

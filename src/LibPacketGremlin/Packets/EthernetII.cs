@@ -143,13 +143,13 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             if (this.Payload is IPv4)
             {
                 this.EtherType = (UInt16)EtherTypes.IPv4;
+            }            
+            else if (Payload is ARP)
+            {
+                this.EtherType = (UInt16)EtherTypes.ARP;
             }
             // TODO: Uncomment when these types are ported over
-            /*else if (Payload is ARP)
-            {
-                EtherType = (UInt16)EtherTypes.ARP;
-            }
-            else if (Payload is OutbreakLabs.PacketGremlin.PacketGremlinCore.Packets.ApplicationLayer.WakeOnLAN)
+            /*else if (Payload is OutbreakLabs.PacketGremlin.PacketGremlinCore.Packets.ApplicationLayer.WakeOnLAN)
             {
                 EtherType = (UInt16)EtherTypes.WakeOnLAN;
             }*/
