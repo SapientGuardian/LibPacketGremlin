@@ -20,7 +20,7 @@
             var parseResult = GenericFactory.Instance.TryParse(rawBytes, out packet);
 
             parseResult.Should().BeTrue();
-            packet.Data.SequenceEqual(
+            packet.Buffer.SequenceEqual(
                         new byte[]
                             {
                                 0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e, 0x80, 0x00, 0x20, 0x20, 0x3a, 0xae, 0x08, 0x00, 0xFF,
@@ -34,7 +34,7 @@
         public void SerializesCorrectly()
         {
             var packet =
-                new Generic(
+                GenericFactory.Instance.Default(
                     new byte[]
                         {
                             0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e, 0x80, 0x00, 0x20, 0x20, 0x3a, 0xae, 0x08, 0x00, 0xFF, 0xFF,

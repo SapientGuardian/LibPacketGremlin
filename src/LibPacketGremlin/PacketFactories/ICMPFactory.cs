@@ -28,5 +28,22 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <returns>True if parsing was successful, false if it is not.</returns>
         public override bool TryParse(byte[] buffer, int index, int count, out ICMP packet)
             => ICMP.TryParse(buffer, index, count, out packet);
+
+        /// <summary>
+        /// Constructs a packet with default values
+        /// </summary>
+        /// <returns>A packet with default values</returns>
+        public ICMP Default()
+        {
+            return new ICMP
+            {
+                Type = 0,
+                Code = 0,
+                Checksum = 0,
+                ID = 0,
+                Sequence = 0,
+                Data = new byte[0]
+            };
+        }
     }
 }

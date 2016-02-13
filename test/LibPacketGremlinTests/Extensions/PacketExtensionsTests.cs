@@ -9,19 +9,20 @@
 
     using Xunit;
     using System.Linq;
+    using OutbreakLabs.LibPacketGremlin.PacketFactories;
     public class PacketExtensionsTests
     {
         [Fact]
         public void CanSerializeToArrray()
         {
-            var packet = new Generic(new byte[] { 1, 2, 3, 4, 5 });
+            var packet = GenericFactory.Instance.Default(new byte[] { 1, 2, 3, 4, 5 });
             packet.ToArray().SequenceEqual(new byte[] { 1, 2, 3, 4, 5 }).Should().BeTrue();
         }
 
         [Fact]
         public void CanDecomposeLayers()
         {
-            var packet = new EthernetII<IPv4<UDP<Generic>>>(new IPv4<UDP<Generic>>(new UDP<Generic>(new Generic())));
+            var packet = EthernetIIFactory.Instance.Default(IPv4Factory.Instance.Default(UDPFactory.Instance.Default(GenericFactory.Instance.Default())));
 
             var layers = packet.Layers().ToArray();
 
@@ -36,14 +37,14 @@
         [Fact]
         public void CanLocateSingleLayer()
         {
-            var packet = new EthernetII<IPv4<UDP<Generic>>>(new IPv4<UDP<Generic>>(new UDP<Generic>(new Generic())));
+            var packet = EthernetIIFactory.Instance.Default(IPv4Factory.Instance.Default(UDPFactory.Instance.Default(GenericFactory.Instance.Default())));
             packet.Layer<UDP>().Should().NotBeNull();
         }
 
         [Fact]
         public void ShouldReturnNullIfLayerCannotBeLocated()
         {
-            var packet = new EthernetII<IPv4<Generic>>(new IPv4<Generic>(new Generic()));
+            var packet = EthernetIIFactory.Instance.Default(IPv4Factory.Instance.Default(GenericFactory.Instance.Default()));
             packet.Layer<UDP>().Should().BeNull();
         }
     }

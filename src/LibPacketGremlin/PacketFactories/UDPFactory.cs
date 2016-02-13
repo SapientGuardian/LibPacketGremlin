@@ -6,6 +6,7 @@
 
 namespace OutbreakLabs.LibPacketGremlin.PacketFactories
 {
+    using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets;
 
     /// <summary>
@@ -28,5 +29,19 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <returns>True if parsing was successful, false if it is not.</returns>
         public override bool TryParse(byte[] buffer, int index, int count, out UDP packet)
             => UDP.TryParse(buffer, index, count, out packet);
+
+        /// <summary>
+        /// Constructs a packet with default values
+        /// </summary>
+        /// <typeparam name="T">Payload type</typeparam>
+        /// <param name="payload">Payload</param>
+        /// <returns>A Packet with default values</returns>
+        public UDP<T> Default<T>(T payload) where T : class, IPacket
+        {
+            return new UDP<T>
+            {                
+                Payload = payload
+            };
+        }
     }
 }

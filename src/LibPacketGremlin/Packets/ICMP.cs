@@ -25,27 +25,10 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
 
         /// <summary>
-        ///     Constructs a packet with default values
+        ///     Constructs an uninitialized packet
         /// </summary>
-        public ICMP()
-            : this(true)
+        internal ICMP()            
         {
-        }
-
-        /// <summary>
-        ///     Constructs a packet with optional defaults. All fields must be set, or things will explode.
-        /// </summary>
-        internal ICMP(bool defaults = true)
-        {
-            if (defaults)
-            {
-                this.Type = 0;
-                this.Code = 0;
-                this.Checksum = 0;
-                this.ID = 0;
-                this.Sequence = 0;
-                this.Data = new byte[0];
-            }
         }
         
         /// <summary>
@@ -103,7 +86,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                 {
                     using (var br = new BinaryReader(ms))
                     {
-                        packet = new ICMP(false);
+                        packet = new ICMP();
                         packet.Type = br.ReadByte();
                         packet.Code = br.ReadByte();
                         packet.Checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());

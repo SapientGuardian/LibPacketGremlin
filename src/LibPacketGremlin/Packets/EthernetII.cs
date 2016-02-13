@@ -238,19 +238,10 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     public class EthernetII<PayloadType> : EthernetII
         where PayloadType : class, IPacket
     {
-        /// <summary>
-        ///     Constructs an EthernetII packet with default values, and the specified payload
-        /// </summary>
-        /// <param name="payload">Packet payload</param>
-        public EthernetII(PayloadType payload)
-        {
-            this.SrcMac = new byte[6];
-            this.DstMac = new byte[6];
-            this.Payload = payload;
-        }
+
 
         /// <summary>
-        ///     Constructs an EthernetII packet with no defaults. All fields must be set, or things will explode.
+        ///     Constructs an uninitialized packet.
         /// </summary>
         internal EthernetII()
         {

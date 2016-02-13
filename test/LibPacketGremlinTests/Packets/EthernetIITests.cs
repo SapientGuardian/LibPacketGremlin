@@ -29,7 +29,7 @@
         [Fact]
         public void SerializesCorrectly()
         {
-            var packet = new EthernetII<Generic>(new Generic(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }));
+            var packet = EthernetIIFactory.Instance.Default(GenericFactory.Instance.Default(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }));
             packet.DstMac = new byte[] { 0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e };
             packet.SrcMac = new byte[] { 0x80, 0x00, 0x20, 0x20, 0x3a, 0xae };
             packet.EtherType = 0x0800;
@@ -51,7 +51,7 @@
         [Fact]
         public void CorrectsEtherType()
         {
-            var packet = new EthernetII<IPv4>(new IPv4<Generic>(new Generic()));
+            var packet = EthernetIIFactory.Instance.Default(IPv4Factory.Instance.Default(GenericFactory.Instance.Default()));
 
             packet.EtherType.Should().Be(0); // Just making sure the test is valid.
             packet.CorrectFields();

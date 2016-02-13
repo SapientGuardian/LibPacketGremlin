@@ -30,31 +30,12 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         private IPacket container;
 
         /// <summary>
-        ///     Constructs a packet with default values
+        ///     Constructs am uninitialized packet
         /// </summary>
-        public ARP()
-            : this(true)
+        internal ARP()           
         {
         }
 
-        /// <summary>
-        ///     Constructs a packet with optional defaults. All fields must be set, or things will explode.
-        /// </summary>
-        internal ARP(bool defaults = true)
-        {
-            if (defaults)
-            {
-                this.HType = 0;
-                this.PType = 0;
-                this.HLen = 0;
-                this.PLen = 0;
-                this.Operation = 0;
-                this.SenderHardwareAddress = new byte[0];
-                this.SenderProtocolAddress = new byte[0];
-                this.TargetHardwareAddress = new byte[0];
-                this.TargetProtocolAddress = new byte[0];
-            }
-        }
         
         /// <summary>
         ///     Gets or sets the Link Layer protocol type. Example: Ethernet is 1.
@@ -130,7 +111,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                 {
                     using (var br = new BinaryReader(ms))
                     {
-                        packet = new ARP(false);
+                        packet = new ARP();
                         packet.HType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         packet.PType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         packet.HLen = br.ReadByte();

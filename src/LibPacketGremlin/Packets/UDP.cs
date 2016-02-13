@@ -217,15 +217,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         where PayloadType : class, IPacket
     {
         /// <summary>
-        ///     Constructs a packet with default values, and the specified payload
-        /// </summary>
-        /// <param name="payload">Packet payload</param>
-        public UDP(PayloadType payload)
-        {
-            this.Payload = payload;
-        }
-
-        /// <summary>
         ///     Constructs a packet with no defaults. All fields must be set, or things will explode.
         /// </summary>
         internal UDP()

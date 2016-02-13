@@ -28,5 +28,25 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <returns>True if parsing was successful, false if it is not.</returns>
         public override bool TryParse(byte[] buffer, int index, int count, out ARP packet)
             => ARP.TryParse(buffer, index, count, out packet);
+
+        /// <summary>
+        /// Constructs a packet with default values
+        /// </summary>
+        /// <returns>A packet with default values</returns>
+        public ARP Default()
+        {
+            return new ARP
+                       {
+                           HType = 0,
+                           PType = 0,
+                           HLen = 0,
+                           PLen = 0,
+                           Operation = 0,
+                           SenderHardwareAddress = new byte[0],
+                           SenderProtocolAddress = new byte[0],
+                           TargetHardwareAddress = new byte[0],
+                           TargetProtocolAddress = new byte[0],
+                       };
+        }
     }
 }

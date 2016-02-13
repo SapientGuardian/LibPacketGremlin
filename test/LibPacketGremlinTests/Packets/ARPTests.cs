@@ -60,9 +60,9 @@
         [Fact]
         public void CorrectsHType()
         {
-            ARP packet = new ARP();
+            ARP packet = ARPFactory.Instance.Default();
             packet.HType.Should().Be(0); // Just making sure our test is valid.
-            packet.SetContainer(new EthernetII<Generic>(new Generic()));
+            packet.SetContainer(EthernetIIFactory.Instance.Default(GenericFactory.Instance.Default()));
             packet.CorrectFields();
             packet.HType.Should().Be(8);
 

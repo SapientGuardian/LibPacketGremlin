@@ -17,33 +17,23 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     /// </summary>
     public class Generic : IPacket
     {
-        private byte[] data;
+        private byte[] buffer;
 
         /// <summary>
         /// Constructs a generic unstructured packet
-        /// </summary>
-        public Generic()
-        {
-            this.Data = Array.Empty<byte>();
-        }
-
-        /// <summary>
-        /// Constructs a generic unstructured packet
-        /// </summary>
-        /// <param name="data">Initial data</param>
-        public Generic(byte[] data)
-        {
-            this.Data = data;
+        /// </summary>        
+        internal Generic()
+        {            
         }
 
         /// <summary>
         /// Gets or sets the data of this packet
         /// </summary>
-        public byte[] Data
+        public byte[] Buffer
         {
             get
             {
-                return this.data;
+                return this.buffer;
             }
             set
             {
@@ -51,7 +41,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                 {
                     throw new ArgumentNullException(nameof(value));
                 }
-                this.data = value;
+                this.buffer = value;
             }
         }
 
@@ -74,7 +64,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <returns>Length of the packet</returns>
         public long Length()
         {
-            return this.Data.Length;
+            return this.Buffer.Length;
         }
 
         /// <summary>
@@ -85,7 +75,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         {
             using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
             {
-                bw.Write(this.Data);
+                bw.Write(this.Buffer);
             }
         }
 
@@ -110,7 +100,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             {
                 byte[] data = new byte[count];
                 Array.Copy(buffer, index, data, 0, count);
-                packet = new Generic(data);
+                packet = new Generic() { Buffer = data };
                 return true;
             }
             catch (Exception)

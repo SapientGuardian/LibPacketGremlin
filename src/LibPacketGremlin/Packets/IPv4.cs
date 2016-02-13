@@ -55,7 +55,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         public UInt16 ID { get; set; }
 
-        private BitVector32 FlagsAndFragOff
+        internal BitVector32 FlagsAndFragOff
         {
             get
             {
@@ -420,29 +420,9 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     public class IPv4<PayloadType> : IPv4
         where PayloadType : class, IPacket
     {
-        /// <summary>
-        ///     Constructs an IPv4 packet with default values, and the specified payload
-        /// </summary>
-        /// <param name="payload">Packet payload</param>
-        public IPv4(PayloadType payload)
-        {
-            this.Version = 4;
-            this.HeaderLength = 5;
-            this.DifferentiatedServices = 0;
-            this.TotalLength = 0;
-            this.ID = 0;
-            this.flagsAndFragOff = new BitVector32(0);
-            this.TTL = 0;
-            this.Protocol = 0;
-            this.HeaderChecksum = 0;
-            this.OptionsAndPadding = new byte[0];
-            this.SourceAddress = new IPv4Address(0);
-            this.DestAddress = new IPv4Address(0);
-            this.Payload = payload;
-        }
 
         /// <summary>
-        ///     Constructs an IPv4 packet with no defaults. All fields must be set, or things will explode.
+        ///     Constructs an uninitialized packet
         /// </summary>
         internal IPv4()
         {
