@@ -260,7 +260,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <param name="start">Starting position in the header array that actually begins the header</param>
         /// <param name="length">Length of the header</param>
         /// <returns>16-bit checksum</returns>
-        public static ushort ComputeChecksum(byte[] header, int start, int length)
+        internal static ushort ComputeChecksum(byte[] header, int start, int length)
         {
             var evenLength = new int[length + length % 2];
             Array.Copy(header, start, evenLength, 0, length);
@@ -291,7 +291,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <param name="count">The length of the packet in bytes</param>        
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] buffer, int index, int count, out IPv4 packet)
+        internal static bool TryParse(byte[] buffer, int index, int count, out IPv4 packet)
         {
             try
             {

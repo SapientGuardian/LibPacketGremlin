@@ -97,7 +97,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <param name="count">The length of the packet in bytes</param>        
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
+        internal static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
         {
             try
             {
