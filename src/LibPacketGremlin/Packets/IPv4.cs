@@ -234,7 +234,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             this.HeaderLength = 5 + this.OptionsAndPadding.Length / 4;
             this.TotalLength = (ushort)(this.HeaderLength * 4 + this.Payload.Length());
 
-            // TODO: Add ICMP when ported over
             // TODO: Add TCP when ported over
             if (this.Payload is IPv4)
             {
@@ -243,6 +242,10 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             else if (this.Payload is UDP)
             {
                 this.Protocol = (byte)Protocols.UDP;
+            }
+            else if (this.Payload is ICMP)
+            {
+                this.Protocol = (byte)Protocols.ICMP;
             }
 
             this.HeaderChecksum = 0;
@@ -345,43 +348,42 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                             payloadBytes = br.ReadBytes(totalLength - (headerLength * 32 / 8));
                         }*/
 
+                        packet = null;
+
                         switch (protocol)
                         {
-                            // TODO: Add ICMP when ported over
+                            
                             case (byte)Protocols.UDP:
                                 {
                                     UDP payload;
                                     if (UDP.TryParse(payloadBytes, out payload))
                                     {
-                                        var newPacket = new IPv4<UDP>();
-                                        newPacket.Payload = payload;
-                                        packet = newPacket;
-                                    }
-                                    else
-                                    {
-                                        Generic fallbackPayload;
-                                        Generic.TryParse(payloadBytes, out fallbackPayload);
-                                        // This can never fail, so I'm not checking the output
+                                        packet = new IPv4<UDP> { Payload = payload };                                        
+                                    }                                    
+                                }
 
-                                        var newPacket = new IPv4<Generic>();
-                                        newPacket.Payload = fallbackPayload;
-                                        packet = newPacket;
+                                break;
+                            case (byte)Protocols.ICMP:
+                                {
+                                    ICMP payload;
+                                    if (ICMP.TryParse(payloadBytes, out payload))
+                                    {
+                                        packet = new IPv4<ICMP> { Payload = payload };                                        
                                     }
                                 }
 
                                 break;
                             // TODO: Add TCP when ported over
 
-                            default:
-                                {
-                                    Generic payload;
-                                    Generic.TryParse(payloadBytes, out payload);
-                                    // This can never fail, so I'm not checking the output
-                                    var newPacket = new IPv4<Generic>();
-                                    newPacket.Payload = payload;
-                                    packet = newPacket;
-                                }
-                                break;
+
+                        }
+
+                        if (packet == null)
+                        {
+                            Generic payload;
+                            Generic.TryParse(payloadBytes, out payload);
+                            // This can never fail, so I'm not checking the output
+                            packet = new IPv4<Generic> { Payload = payload };
                         }
 
                         packet.Version = version;

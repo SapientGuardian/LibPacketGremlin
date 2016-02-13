@@ -143,12 +143,12 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             if (this.Payload is IPv4)
             {
                 this.EtherType = (UInt16)EtherTypes.IPv4;
-            }            
+            }
             else if (Payload is ARP)
             {
                 this.EtherType = (UInt16)EtherTypes.ARP;
             }
-            // TODO: Uncomment when these types are ported over
+            // TODO: Uncomment when WOL is ported over
             /*else if (Payload is OutbreakLabs.PacketGremlin.PacketGremlinCore.Packets.ApplicationLayer.WakeOnLAN)
             {
                 EtherType = (UInt16)EtherTypes.WakeOnLAN;
@@ -182,27 +182,16 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
                         var payloadBytes = br.ReadBytes((int)(data.Length - br.BaseStream.Position));
 
+                        packet = null;
                         switch (etherType)
                         {
-                            
+
                             case (ushort)EtherTypes.IPv4:
                                 {
                                     IPv4 payload;
                                     if (IPv4.TryParse(payloadBytes, out payload))
                                     {
-                                        var newPacket = new EthernetII<IPv4>();
-                                        newPacket.Payload = payload;
-                                        packet = newPacket;
-                                    }
-                                    else
-                                    {
-                                        Generic fallbackPayload;
-                                        Generic.TryParse(payloadBytes, out fallbackPayload);
-                                        // This can never fail, so I'm not checking the output
-
-                                        var newPacket = new EthernetII<Generic>();
-                                        newPacket.Payload = fallbackPayload;
-                                        packet = newPacket;
+                                        packet = new EthernetII<IPv4> { Payload = payload };                                        
                                     }
                                 }
                                 break;
@@ -211,34 +200,20 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                                     ARP payload;
                                     if (ARP.TryParse(payloadBytes, out payload))
                                     {
-                                        var newPacket = new EthernetII<ARP>();
-                                        newPacket.Payload = payload;
-                                        packet = newPacket;
-                                    }
-                                    else
-                                    {
-                                        Generic fallbackPayload;
-                                        Generic.TryParse(payloadBytes, out fallbackPayload);
-                                        // This can never fail, so I'm not checking the output
-
-                                        var newPacket = new EthernetII<Generic>();
-                                        newPacket.Payload = fallbackPayload;
-                                        packet = newPacket;
+                                        packet = new EthernetII<ARP> { Payload = payload };                                        
                                     }
                                 }
                                 break;
 
-                            default:
-                                {
-                                    Generic payload;
-                                    Generic.TryParse(payloadBytes, out payload);
-                                    // This can never fail, so I'm not checking the output
+                        }
 
-                                    var newPacket = new EthernetII<Generic>();
-                                    newPacket.Payload = payload;
-                                    packet = newPacket;
-                                }
-                                break;
+                        if (packet == null)
+                        {
+                            Generic payload;
+                            Generic.TryParse(payloadBytes, out payload);
+                            
+                            // This can never fail, so I'm not checking the output
+                            packet = new EthernetII<Generic> { Payload = payload };                            
                         }
 
                         packet.DstMac = dstMac;
@@ -289,7 +264,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             get
             {
                 // Should never be null or of the wrong type, because the base Setter makes it so.
-                return (PayloadType)base.Payload;                
+                return (PayloadType)base.Payload;
             }
 
             set

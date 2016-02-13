@@ -57,7 +57,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
         
         /// <summary>
-        ///     Gets or sets thhe Link Layer protocol type. Example: Ethernet is 1.
+        ///     Gets or sets the Link Layer protocol type. Example: Ethernet is 1.
         /// </summary>
         public UInt16 HType { get; set; }
 

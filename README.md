@@ -7,18 +7,18 @@ LibPacketGremlin is a port of the core of PacketGremlin, an unreleased packet an
 There exist other libraries for manipulating packets on .NET, but none that embrace generics to provide the sort of usage patterns that this library does.
 
 ## Status
-LibPacketGremlin is being excised from its original codebase iteratively. The first release includes support for...
+LibPacketGremlin is being excised from its original codebase iteratively. This release includes support for...
 
 * Ethernet II
 * IPv4
 * UDP
 * ARP
+* ICMP
 
 Not yet ported...
 
 * RTP
 * WakeOnLan
-* ICMP
 * IEEE 802.1x
 * IEEE 802.11
 * LLC
