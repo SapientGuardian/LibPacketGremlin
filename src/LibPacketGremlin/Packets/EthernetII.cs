@@ -184,13 +184,34 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
                         switch (etherType)
                         {
-                            // TODO: Add ARP when ported over
+                            
                             case (ushort)EtherTypes.IPv4:
                                 {
                                     IPv4 payload;
                                     if (IPv4.TryParse(payloadBytes, out payload))
                                     {
                                         var newPacket = new EthernetII<IPv4>();
+                                        newPacket.Payload = payload;
+                                        packet = newPacket;
+                                    }
+                                    else
+                                    {
+                                        Generic fallbackPayload;
+                                        Generic.TryParse(payloadBytes, out fallbackPayload);
+                                        // This can never fail, so I'm not checking the output
+
+                                        var newPacket = new EthernetII<Generic>();
+                                        newPacket.Payload = fallbackPayload;
+                                        packet = newPacket;
+                                    }
+                                }
+                                break;
+                            case (ushort)EtherTypes.ARP:
+                                {
+                                    ARP payload;
+                                    if (ARP.TryParse(payloadBytes, out payload))
+                                    {
+                                        var newPacket = new EthernetII<ARP>();
                                         newPacket.Payload = payload;
                                         packet = newPacket;
                                     }
