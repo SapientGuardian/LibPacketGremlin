@@ -15,7 +15,9 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using OutbreakLabs.LibPacketGremlin.Packets.ARPSupport;
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
-
+    /// <summary>
+    /// Internet Control Message Protocol
+    /// </summary>
     public class ICMP : IPacket
     {
         /// <summary>

@@ -148,11 +148,11 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             {
                 this.EtherType = (UInt16)EtherTypes.ARP;
             }
-            // TODO: Uncomment when WOL is ported over
-            /*else if (Payload is OutbreakLabs.PacketGremlin.PacketGremlinCore.Packets.ApplicationLayer.WakeOnLAN)
+            else if (Payload is WakeOnLan)
             {
                 EtherType = (UInt16)EtherTypes.WakeOnLAN;
-            }*/
+            }
+            
             this.Payload.CorrectFields();
         }
 

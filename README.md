@@ -14,11 +14,10 @@ LibPacketGremlin is being excised from its original codebase iteratively. This r
 * UDP
 * ARP
 * ICMP
+* WakeOnLan
 
 Not yet ported...
 
-* RTP
-* WakeOnLan
 * IEEE 802.1x
 * IEEE 802.11
 * LLC
