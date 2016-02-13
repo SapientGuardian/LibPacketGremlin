@@ -84,20 +84,22 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] data, out ICMP packet)
+        public static bool TryParse(byte[] buffer, int index, int count, out ICMP packet)
         {
             try
             {
-                if (data.Length < MinimumParseableBytes)
+                if (count < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(data))
+                using (var ms = new MemoryStream(buffer, index, count, false))
                 {
                     using (var br = new BinaryReader(ms))
                     {
@@ -107,7 +109,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         packet.Checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         packet.ID = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         packet.Sequence = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Data = br.ReadBytes(data.Length - 8);
+                        packet.Data = br.ReadBytes(count - 8);
 
                         return true;
                     }

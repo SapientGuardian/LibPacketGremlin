@@ -14,10 +14,12 @@ namespace OutbreakLabs.LibPacketGremlin.Abstractions
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        bool TryParse(byte[] data, out IPacket packet);
+        bool TryParse(byte[] buffer, int index, int count, out IPacket packet);
     }
 
     /// <summary>
@@ -30,9 +32,11 @@ namespace OutbreakLabs.LibPacketGremlin.Abstractions
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        bool TryParse(byte[] data, out T packet);
+        bool TryParse(byte[] buffer, int index, int count, out T packet);
     }
 }

@@ -111,20 +111,22 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] data, out ARP packet)
+        public static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
         {
             try
             {
-                if (data.Length < MinimumParseableBytes)
+                if (count < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(data))
+                using (var ms = new MemoryStream(buffer,index, count, false))
                 {
                     using (var br = new BinaryReader(ms))
                     {
@@ -134,7 +136,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         packet.HLen = br.ReadByte();
                         packet.PLen = br.ReadByte();
                         packet.Operation = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        if (data.Length < (6 + (packet.HLen * 2) + (packet.PLen * 2)))
+                        if (count < (6 + (packet.HLen * 2) + (packet.PLen * 2)))
                         {
                             packet.SenderHardwareAddress = new byte[packet.HLen];
                             packet.SenderProtocolAddress = new byte[packet.PLen];

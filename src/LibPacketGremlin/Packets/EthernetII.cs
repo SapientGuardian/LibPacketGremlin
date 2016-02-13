@@ -159,28 +159,28 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] data, out EthernetII packet)
+        public static bool TryParse(byte[] buffer, int index, int count, out EthernetII packet)
         {
             try
             {
-                if (data.Length < MinimumParseableBytes)
+                if (count < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(data))
+                using (var ms = new MemoryStream(buffer, index, count, false))
                 {
                     using (var br = new BinaryReader(ms))
                     {
                         var dstMac = br.ReadBytes(6);
                         var srcMac = br.ReadBytes(6);
                         var etherType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-
-                        var payloadBytes = br.ReadBytes((int)(data.Length - br.BaseStream.Position));
 
                         packet = null;
                         switch (etherType)
@@ -189,7 +189,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                             case (ushort)EtherTypes.IPv4:
                                 {
                                     IPv4 payload;
-                                    if (IPv4.TryParse(payloadBytes, out payload))
+                                    if (IPv4.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload))
                                     {
                                         packet = new EthernetII<IPv4> { Payload = payload };                                        
                                     }
@@ -198,7 +198,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                             case (ushort)EtherTypes.ARP:
                                 {
                                     ARP payload;
-                                    if (ARP.TryParse(payloadBytes, out payload))
+                                    if (ARP.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload))
                                     {
                                         packet = new EthernetII<ARP> { Payload = payload };                                        
                                     }
@@ -210,7 +210,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         if (packet == null)
                         {
                             Generic payload;
-                            Generic.TryParse(payloadBytes, out payload);
+                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload);
                             
                             // This can never fail, so I'm not checking the output
                             packet = new EthernetII<Generic> { Payload = payload };                            

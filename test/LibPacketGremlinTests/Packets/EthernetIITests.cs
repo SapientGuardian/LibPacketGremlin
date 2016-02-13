@@ -7,9 +7,10 @@
 
     using OutbreakLabs.LibPacketGremlin.Packets;
     using OutbreakLabs.LibPacketGremlin.Packets.EthernetIISupport;
+    using OutbreakLabs.LibPacketGremlin.PacketFactories;
 
     using Xunit;
-
+    using OutbreakLabs.LibPacketGremlin.Extensions;
     public class EthernetIITests
     {
         [Fact]
@@ -17,7 +18,7 @@
         {
             byte[] rawBytes = { 0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e, 0x80, 0x00, 0x20, 0x20, 0x3a, 0xae, 0x08, 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
             EthernetII packet;
-            var parseResult = EthernetII.TryParse(rawBytes, out packet);
+            var parseResult = EthernetIIFactory.Instance.TryParse(rawBytes, out packet);
 
             parseResult.Should().BeTrue();
             packet.DstMac.SequenceEqual(new byte[] { 0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e }).Should().BeTrue();

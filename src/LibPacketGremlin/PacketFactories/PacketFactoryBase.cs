@@ -18,21 +18,25 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public abstract bool TryParse(byte[] data, out T packet);
+        public abstract bool TryParse(byte[] buffer, int index, int count, out T packet);
 
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public bool TryParse(byte[] data, out IPacket packet)
+        public bool TryParse(byte[] buffer, int index, int count, out IPacket packet)
         {
             T parsed;
-            var result = this.TryParse(data, out parsed);
+            var result = this.TryParse(buffer, index, count, out parsed);
             packet = parsed;
             return result;
         }

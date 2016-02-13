@@ -8,7 +8,8 @@
     using OutbreakLabs.LibPacketGremlin.Packets;
 
     using Xunit;
-
+    using OutbreakLabs.LibPacketGremlin.PacketFactories;
+    using OutbreakLabs.LibPacketGremlin.Extensions;
     public class GenericTests
     {
         [Fact]
@@ -16,7 +17,7 @@
         {
             byte[] rawBytes = { 0x80, 0x00, 0x20, 0x7a, 0x3f, 0x3e, 0x80, 0x00, 0x20, 0x20, 0x3a, 0xae, 0x08, 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
             Generic packet;
-            var parseResult = Generic.TryParse(rawBytes, out packet);
+            var parseResult = GenericFactory.Instance.TryParse(rawBytes, out packet);
 
             parseResult.Should().BeTrue();
             packet.Data.SequenceEqual(

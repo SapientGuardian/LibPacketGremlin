@@ -162,20 +162,22 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] data, out UDP packet)
+        public static bool TryParse(byte[] buffer, int index, int count, out UDP packet)
         {
             try
             {
-                if (data.Length < MinimumParseableBytes)
+                if (count < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(data))
+                using (var ms = new MemoryStream(buffer, index, count, false))
                 {
                     using (var br = new BinaryReader(ms))
                     {
@@ -184,10 +186,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         var totalLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         var checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
 
-                        var payloadBytes = br.ReadBytes(data.Length - 8);
-
                         Generic payload;
-                        Generic.TryParse(payloadBytes, out payload);
+                        Generic.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out payload);
                         // This can never fail, so I'm not checking the output
                         var newPacket = new UDP<Generic>();
                         newPacket.Payload = payload;
@@ -241,7 +241,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             {
 
                 // Should never be null or of the wrong type, because the base Setter makes it so.
-                return (PayloadType)base.Payload;                
+                return (PayloadType)base.Payload;
             }
 
             set

@@ -85,7 +85,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         /// Gets or sets the Don't Fragment flag. False is "May Fragment", True is "Don't Fragment".
         /// </summary>
-        public bool DontFragmentFlag 
+        public bool DontFragmentFlag
         {
             get
             {
@@ -286,20 +286,22 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
         /// </summary>
-        /// <param name="data">Raw data to parse</param>
+        /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public static bool TryParse(byte[] data, out IPv4 packet)
+        public static bool TryParse(byte[] buffer, int index, int count, out IPv4 packet)
         {
             try
             {
-                if (data.Length < MinimumParseableBytes)
+                if (count < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(data))
+                using (var ms = new MemoryStream(buffer, index, count, false))
                 {
                     using (var br = new BinaryReader(ms))
                     {
@@ -317,7 +319,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         var sourceAddress = new IPv4Address(br.ReadBytes(4));
                         var destAddress = new IPv4Address(br.ReadBytes(4));
 
-                        if (headerLength == 0 || (headerLength * 32 / 8 > data.Length))
+                        if (headerLength == 0 || (headerLength * 32 / 8 > count))
                         {
                             // Specified header length is larger than available bytes
                             packet = null;
@@ -336,44 +338,44 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
                         br.BaseStream.Seek(headerLength * 32 / 8, SeekOrigin.Begin);
 
-                        byte[] payloadBytes;
                         
                         // TODO: Accept option for IgnoreLength
+                        int payloadLength;
                         if (true /*IgnoreLength*/)
                         {
-                            payloadBytes = br.ReadBytes(data.Length - (int)br.BaseStream.Position);
+                            payloadLength = count - (int)br.BaseStream.Position;
                         }
                         /*else
-                        {
-                            payloadBytes = br.ReadBytes(totalLength - (headerLength * 32 / 8));
+                        {                            
+                            payloadLength = (totalLength - (headerLength * 32 / 8)
                         }*/
 
                         packet = null;
 
                         switch (protocol)
                         {
-                            
+
                             case (byte)Protocols.UDP:
                                 {
                                     UDP payload;
-                                    if (UDP.TryParse(payloadBytes, out payload))
+                                    if (UDP.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload))
                                     {
-                                        packet = new IPv4<UDP> { Payload = payload };                                        
-                                    }                                    
+                                        packet = new IPv4<UDP> { Payload = payload };
+                                    }
                                 }
 
                                 break;
                             case (byte)Protocols.ICMP:
                                 {
                                     ICMP payload;
-                                    if (ICMP.TryParse(payloadBytes, out payload))
+                                    if (ICMP.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload))
                                     {
-                                        packet = new IPv4<ICMP> { Payload = payload };                                        
+                                        packet = new IPv4<ICMP> { Payload = payload };
                                     }
                                 }
 
                                 break;
-                            // TODO: Add TCP when ported over
+                                // TODO: Add TCP when ported over
 
 
                         }
@@ -381,7 +383,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         if (packet == null)
                         {
                             Generic payload;
-                            Generic.TryParse(payloadBytes, out payload);
+                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload);
                             // This can never fail, so I'm not checking the output
                             packet = new IPv4<Generic> { Payload = payload };
                         }
@@ -454,7 +456,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             get
             {
                 // Should never be null or of the wrong type, because the base Setter makes it so.
-                return (PayloadType)base.Payload;                
+                return (PayloadType)base.Payload;
             }
             set
             {

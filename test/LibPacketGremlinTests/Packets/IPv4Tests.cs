@@ -9,7 +9,8 @@
     using OutbreakLabs.LibPacketGremlin.Packets.IPv4Support;
 
     using Xunit;
-
+    using OutbreakLabs.LibPacketGremlin.PacketFactories;
+    using OutbreakLabs.LibPacketGremlin.Extensions;
     public class IPv4Tests
     {
         [Fact]
@@ -24,7 +25,7 @@
             0x32, 0xcd, 0x87, 0x1c, 0x24, 0x2d, 0xad, 0x15, 0xc4, 0x0f};
 
             IPv4 packet;
-            var parseResult = IPv4.TryParse(rawBytes, out packet);
+            var parseResult = IPv4Factory.Instance.TryParse(rawBytes, out packet);
 
             parseResult.Should().BeTrue();
 
@@ -49,7 +50,7 @@
         public void SerializesCorrectly()
         {
             IPv4 packet;
-            IPv4.TryParse(new byte[] {0x45, 0x00, 0x00, 0x50, 0x00, 0x00, 0x40, 0x00, 0x40, 0x11
+            IPv4Factory.Instance.TryParse(new byte[] {0x45, 0x00, 0x00, 0x50, 0x00, 0x00, 0x40, 0x00, 0x40, 0x11
             , 0xb6, 0xce, 0xc0, 0xa8, 0x01, 0x03, 0xc0, 0xa8, 0x01, 0x7b, 0x80, 0x0d,
             0xf1, 0x00, 0x00, 0x3c, 0x89, 0x11, 0xec, 0x14, 0x61, 0x11, 0x00, 0x00,
             0x00, 0xfe, 0x09, 0x65, 0x1b, 0xbb, 0x9f, 0xa2, 0x70, 0x43, 0x74, 0x90,
@@ -61,6 +62,8 @@
             using (var ms = new MemoryStream())
             {
                 packet.WriteToStream(ms);
+                var x = ms.ToArray();
+                x.ToString();
                 ms.ToArray()
                     .SequenceEqual(
                         new byte[]
@@ -88,7 +91,7 @@
             0x32, 0xcd, 0x87, 0x1c, 0x24, 0x2d, 0xad, 0x15, 0xc4, 0x0f};
 
             IPv4 packet;
-            var parseResult = IPv4.TryParse(rawBytes, out packet);
+            var parseResult = IPv4Factory.Instance.TryParse(rawBytes, out packet);
 
             parseResult.Should().BeTrue();
 
