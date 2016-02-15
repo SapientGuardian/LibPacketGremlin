@@ -17,7 +17,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
-    /// Wireless LAN protocol
+    ///     Wireless LAN protocol
     /// </summary>
     public abstract class IEEE802_11 : IPacket
     {
@@ -99,7 +99,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether a data frame was sent to a station
+        ///     Gets or sets a value indicating whether a data frame was sent to a station
         /// </summary>
         public bool ToDS
         {
@@ -228,7 +228,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         public UInt16 DurationID { get; set; }
 
         /// <summary>
-        /// Gets or sets the original source of the frame
+        ///     Gets or sets the original source of the frame
         /// </summary>
         public byte[] Source
         {
@@ -249,7 +249,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the final recipient of the frame
+        ///     Gets or sets the final recipient of the frame
         /// </summary>
         public byte[] Destination
         {
@@ -270,7 +270,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the MAC address of the access point
+        ///     Gets or sets the MAC address of the access point
         /// </summary>
         public byte[] BSSID
         {
@@ -291,7 +291,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the immediate sender of the frame
+        ///     Gets or sets the immediate sender of the frame
         /// </summary>
         public byte[] Transmitter
         {
@@ -312,7 +312,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the immediate receiver of the frame
+        ///     Gets or sets the immediate receiver of the frame
         /// </summary>
         public byte[] Receiver
         {
@@ -333,18 +333,23 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
+        ///     Checksum, not always present
+        /// </summary>
+        public UInt32 FrameCheckSequence { get; set; }
+
+        /// <summary>
         ///     The Sequence Control field is a two-byte section used for identifying message order as well as eliminating
         ///     duplicate frames.
         /// </summary>
         public UInt16 SequenceControl { get; set; }
 
         /// <summary>
-        /// Gets or sets the fragment number
+        ///     Gets or sets the fragment number
         /// </summary>
         public int FragmentNumber => this.SequenceControl & 15;
 
         /// <summary>
-        /// Gets or sets the sequence number
+        ///     Gets or sets the sequence number
         /// </summary>
         public int SequenceNumber => this.SequenceControl >> 4;
 
@@ -367,7 +372,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the integrity check value for WEP
+        ///     Gets or sets the integrity check value for WEP
         /// </summary>
         public UInt32 WEP_ICV { get; set; }
 
@@ -524,11 +529,16 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
             this.Payload.WriteToStream(stream);
 
-            if (this.IsWep)
+            using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
             {
-                using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
+                if (this.IsWep)
                 {
                     bw.Write(ByteOrder.HostToNetworkOrder(this.WEP_ICV));
+                }
+
+                if (this.FrameCheckSequence != 0)
+                {
+                    bw.Write(this.FrameCheckSequence);
                 }
             }
         }
@@ -697,7 +707,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                             packet = new IEEE802_11<Generic> { Payload = payload };
                         }
 
-                        br.BaseStream.Seek(safePayloadLen, SeekOrigin.Current);
+                        br.BaseStream.Seek(packet.Payload.Length(), SeekOrigin.Current);
 
                         UInt32 wep_ICV = 0;
                         if (isWep)
@@ -718,6 +728,11 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         packet.CCMP_WEP_Data = ccmp_WEP_Data;
                         packet.WEP_ICV = wep_ICV;
 
+                        if (br.BaseStream.Position == count - 4)
+                        {
+                            packet.FrameCheckSequence = br.ReadUInt32();
+                        }
+
                         return true;
                     }
                 }
@@ -731,7 +746,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     }
 
     /// <summary>
-    /// Wireless LAN protocol
+    ///     Wireless LAN protocol
     /// </summary>
     public class IEEE802_11<PayloadType> : IEEE802_11
         where PayloadType : class, IPacket
