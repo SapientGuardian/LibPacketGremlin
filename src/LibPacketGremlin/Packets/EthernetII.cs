@@ -15,7 +15,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
-    /// A frame on an Ethernet link
+    ///     A frame on an Ethernet link
     /// </summary>
     public abstract class EthernetII : IPacket
     {
@@ -76,12 +76,13 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is encapsulated in the payload of an Ethernet Frame. EtherType numbering generally starts from 0x0800.
+        ///     EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is encapsulated in the
+        ///     payload of an Ethernet Frame. EtherType numbering generally starts from 0x0800.
         /// </summary>
         public UInt16 EtherType { get; set; }
 
         /// <summary>
-        /// Gets the payload contained within this packet
+        ///     Gets the payload contained within this packet
         /// </summary>
         public IPacket Payload
         {
@@ -144,15 +145,15 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             {
                 this.EtherType = (UInt16)EtherTypes.IPv4;
             }
-            else if (Payload is ARP)
+            else if (this.Payload is ARP)
             {
                 this.EtherType = (UInt16)EtherTypes.ARP;
             }
-            else if (Payload is WakeOnLan)
+            else if (this.Payload is WakeOnLan)
             {
-                EtherType = (UInt16)EtherTypes.WakeOnLAN;
+                this.EtherType = (UInt16)EtherTypes.WakeOnLAN;
             }
-            
+
             this.Payload.CorrectFields();
         }
 
@@ -161,7 +162,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         internal static bool TryParse(byte[] buffer, int index, int count, out EthernetII packet)
@@ -185,35 +186,45 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         packet = null;
                         switch (etherType)
                         {
-
                             case (ushort)EtherTypes.IPv4:
                                 {
                                     IPv4 payload;
-                                    if (IPv4.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload))
+                                    if (IPv4.TryParse(
+                                        buffer,
+                                        index + (int)br.BaseStream.Position,
+                                        (int)(count - br.BaseStream.Position),
+                                        out payload))
                                     {
-                                        packet = new EthernetII<IPv4> { Payload = payload };                                        
+                                        packet = new EthernetII<IPv4> { Payload = payload };
                                     }
                                 }
                                 break;
                             case (ushort)EtherTypes.ARP:
                                 {
                                     ARP payload;
-                                    if (ARP.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload))
+                                    if (ARP.TryParse(
+                                        buffer,
+                                        index + (int)br.BaseStream.Position,
+                                        (int)(count - br.BaseStream.Position),
+                                        out payload))
                                     {
-                                        packet = new EthernetII<ARP> { Payload = payload };                                        
+                                        packet = new EthernetII<ARP> { Payload = payload };
                                     }
                                 }
                                 break;
-
                         }
 
                         if (packet == null)
                         {
                             Generic payload;
-                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, (int)(count - br.BaseStream.Position), out payload);
-                            
+                            Generic.TryParse(
+                                buffer,
+                                index + (int)br.BaseStream.Position,
+                                (int)(count - br.BaseStream.Position),
+                                out payload);
+
                             // This can never fail, so I'm not checking the output
-                            packet = new EthernetII<Generic> { Payload = payload };                            
+                            packet = new EthernetII<Generic> { Payload = payload };
                         }
 
                         packet.DstMac = dstMac;
@@ -233,13 +244,11 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     }
 
     /// <summary>
-    /// A frame on an Ethernet link
+    ///     A frame on an Ethernet link
     /// </summary>
     public class EthernetII<PayloadType> : EthernetII
         where PayloadType : class, IPacket
     {
-
-
         /// <summary>
         ///     Constructs an uninitialized packet.
         /// </summary>
@@ -248,7 +257,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the payload contained within this packet
+        ///     Gets or sets the payload contained within this packet
         /// </summary>
         public new PayloadType Payload
         {

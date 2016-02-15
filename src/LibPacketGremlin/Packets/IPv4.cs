@@ -18,7 +18,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
-    /// IPv4 is a connectionless protocol for use on packet-switched networks
+    ///     IPv4 is a connectionless protocol for use on packet-switched networks
     /// </summary>
     public abstract class IPv4 : IPacket
     {
@@ -31,27 +31,27 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         private IPacket payload;
 
         /// <summary>
-        /// Gets or sets the version of IP. This should always be 4.
+        ///     Gets or sets the version of IP. This should always be 4.
         /// </summary>
         public Nibble Version { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of 32-bit words in the header.
+        ///     Gets or sets the number of 32-bit words in the header.
         /// </summary>
         public Nibble HeaderLength { get; set; }
 
         /// <summary>
-        /// Gets or sets a value used for packet classification purposes.
+        ///     Gets or sets a value used for packet classification purposes.
         /// </summary>
         public byte DifferentiatedServices { get; set; }
 
         /// <summary>
-        /// Gets or sets the entire packet size, including header and data, in bytes.
+        ///     Gets or sets the entire packet size, including header and data, in bytes.
         /// </summary>
         public UInt16 TotalLength { get; set; }
 
         /// <summary>
-        /// Gets or sets a unique identifier, primarily used for fragmentation.
+        ///     Gets or sets a unique identifier, primarily used for fragmentation.
         /// </summary>
         public UInt16 ID { get; set; }
 
@@ -68,7 +68,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the reserved flag, which should always be zero.
+        ///     Gets or sets the reserved flag, which should always be zero.
         /// </summary>
         public bool ReservedFlag
         {
@@ -83,7 +83,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the Don't Fragment flag. False is "May Fragment", True is "Don't Fragment".
+        ///     Gets or sets the Don't Fragment flag. False is "May Fragment", True is "Don't Fragment".
         /// </summary>
         public bool DontFragmentFlag
         {
@@ -98,7 +98,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the More Fragments flag. False is "Last Fragment", True is "More Fragments".
+        ///     Gets or sets the More Fragments flag. False is "Last Fragment", True is "More Fragments".
         /// </summary>
         public bool MoreFragmentsFlag
         {
@@ -113,9 +113,9 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets a value indicating the offset of a particular fragment 
-        /// relative to the beginning of the original unfragmented IP datagram,
-        /// in units of eight-byte blocks.
+        ///     Gets or sets a value indicating the offset of a particular fragment
+        ///     relative to the beginning of the original unfragmented IP datagram,
+        ///     in units of eight-byte blocks.
         /// </summary>
         public int FragOff
         {
@@ -130,37 +130,38 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets a value limiting a datagram's lifetime.
+        ///     Gets or sets a value limiting a datagram's lifetime.
         /// </summary>
         public byte TTL { get; set; }
 
         /// <summary>
-        /// Gets or sets a value defining the protocol used in the data portion of the IP datagram.
+        ///     Gets or sets a value defining the protocol used in the data portion of the IP datagram.
         /// </summary>
         public byte Protocol { get; set; }
 
         /// <summary>
-        /// Gets or sets a 16-bit checksum used for error-checking of the header
+        ///     Gets or sets a 16-bit checksum used for error-checking of the header
         /// </summary>
         public UInt16 HeaderChecksum { get; set; }
 
         /// <summary>
-        /// Gets or sets the sender of the packet
+        ///     Gets or sets the sender of the packet
         /// </summary>
         public IPv4Address SourceAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the destination of the packet
+        ///     Gets or sets the destination of the packet
         /// </summary>
         public IPv4Address DestAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets a byte array containing rarely-used options, and padding needed to ensure the header contains an integer number of 32-bit words.
+        ///     Gets or sets a byte array containing rarely-used options, and padding needed to ensure the header contains an
+        ///     integer number of 32-bit words.
         /// </summary>
         public byte[] OptionsAndPadding { get; set; }
 
         /// <summary>
-        /// Gets the payload contained within this packet
+        ///     Gets the payload contained within this packet
         /// </summary>
         public IPacket Payload
         {
@@ -254,7 +255,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Compute the checksum of an IPv4 Header
+        ///     Compute the checksum of an IPv4 Header
         /// </summary>
         /// <param name="header">Byte array containing the header</param>
         /// <param name="start">Starting position in the header array that actually begins the header</param>
@@ -288,7 +289,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         internal static bool TryParse(byte[] buffer, int index, int count, out IPv4 packet)
@@ -338,7 +339,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
                         br.BaseStream.Seek(headerLength * 32 / 8, SeekOrigin.Begin);
 
-                        
                         // TODO: Accept option for IgnoreLength
                         int payloadLength;
                         if (true /*IgnoreLength*/)
@@ -354,11 +354,14 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
                         switch (protocol)
                         {
-
                             case (byte)Protocols.UDP:
                                 {
                                     UDP payload;
-                                    if (UDP.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload))
+                                    if (UDP.TryParse(
+                                        buffer,
+                                        index + (int)br.BaseStream.Position,
+                                        payloadLength,
+                                        out payload))
                                     {
                                         packet = new IPv4<UDP> { Payload = payload };
                                     }
@@ -368,16 +371,18 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                             case (byte)Protocols.ICMP:
                                 {
                                     ICMP payload;
-                                    if (ICMP.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload))
+                                    if (ICMP.TryParse(
+                                        buffer,
+                                        index + (int)br.BaseStream.Position,
+                                        payloadLength,
+                                        out payload))
                                     {
                                         packet = new IPv4<ICMP> { Payload = payload };
                                     }
                                 }
 
                                 break;
-                                // TODO: Add TCP when ported over
-
-
+                            // TODO: Add TCP when ported over
                         }
 
                         if (packet == null)
@@ -414,13 +419,12 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     }
 
     /// <summary>
-    /// IPv4 is a connectionless protocol for use on packet-switched networks
+    ///     IPv4 is a connectionless protocol for use on packet-switched networks
     /// </summary>
     /// <typeparam name="PayloadType"></typeparam>
     public class IPv4<PayloadType> : IPv4
         where PayloadType : class, IPacket
     {
-
         /// <summary>
         ///     Constructs an uninitialized packet
         /// </summary>
@@ -429,7 +433,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the payload contained within this packet
+        ///     Gets or sets the payload contained within this packet
         /// </summary>
         public new PayloadType Payload
         {

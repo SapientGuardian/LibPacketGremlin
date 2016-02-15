@@ -20,7 +20,7 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         public abstract bool TryParse(byte[] buffer, int index, int count, out T packet);
@@ -30,7 +30,7 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         public bool TryParse(byte[] buffer, int index, int count, out IPacket packet)

@@ -12,27 +12,25 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Extensions;
-    using OutbreakLabs.LibPacketGremlin.Packets.ARPSupport;
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
-    /// Internet Control Message Protocol
+    ///     Internet Control Message Protocol
     /// </summary>
     public class ICMP : IPacket
     {
         /// <summary>
-        /// The minimum number of bytes required for a successful parse
+        ///     The minimum number of bytes required for a successful parse
         /// </summary>
         private const int MinimumParseableBytes = 8;
-
 
         /// <summary>
         ///     Constructs an uninitialized packet
         /// </summary>
-        internal ICMP()            
+        internal ICMP()
         {
         }
-        
+
         /// <summary>
         ///     Gets or sets the ICMP type
         /// </summary>
@@ -44,11 +42,11 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         public byte Code { get; set; }
 
         /// <summary>
-        ///     Gets or sets error checking data. Calculated from the ICMP header+data, with value 0 for this field. The algorithm is the same as the header checksum for IPv4.
+        ///     Gets or sets error checking data. Calculated from the ICMP header+data, with value 0 for this field. The algorithm
+        ///     is the same as the header checksum for IPv4.
         /// </summary>
         public UInt16 Checksum { get; set; }
 
-        
         public UInt16 ID { get; set; }
 
         /// <summary>
@@ -60,52 +58,11 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         ///     Gets or sets the data specific to the message type indicated by the Type and Code fields.
         /// </summary>
         public byte[] Data { get; set; }
-        
+
         /// <summary>
         ///     Gets the payload contained within this packet
         /// </summary>
         public IPacket Payload => null;
-
-        /// <summary>
-        ///     Attempts to parse raw data into a structured packet
-        /// </summary>
-        /// <param name="buffer">Raw data to parse</param>
-        /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
-        /// <param name="index">The index into the buffer at which the packet begins</param>
-        /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out ICMP packet)
-        {
-            try
-            {
-                if (count < MinimumParseableBytes)
-                {
-                    packet = null;
-                    return false;
-                }
-
-                using (var ms = new MemoryStream(buffer, index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        packet = new ICMP();
-                        packet.Type = br.ReadByte();
-                        packet.Code = br.ReadByte();
-                        packet.Checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.ID = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Sequence = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Data = br.ReadBytes(count - 8);
-
-                        return true;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                packet = null;
-                return false;
-            }
-        }
 
         /// <summary>
         ///     Set the enclosing packet
@@ -151,6 +108,47 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             this.Checksum = 0;
             var thisAsBytes = this.ToArray();
             this.Checksum = IPv4.ComputeChecksum(thisAsBytes, 0, thisAsBytes.Length);
+        }
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="buffer">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>
+        /// <param name="index">The index into the buffer at which the packet begins</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        internal static bool TryParse(byte[] buffer, int index, int count, out ICMP packet)
+        {
+            try
+            {
+                if (count < MinimumParseableBytes)
+                {
+                    packet = null;
+                    return false;
+                }
+
+                using (var ms = new MemoryStream(buffer, index, count, false))
+                {
+                    using (var br = new BinaryReader(ms))
+                    {
+                        packet = new ICMP();
+                        packet.Type = br.ReadByte();
+                        packet.Code = br.ReadByte();
+                        packet.Checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        packet.ID = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        packet.Sequence = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        packet.Data = br.ReadBytes(count - 8);
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                packet = null;
+                return false;
+            }
         }
     }
 }

@@ -20,23 +20,22 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     public class ARP : IPacket
     {
         /// <summary>
-        /// The minimum number of bytes required for a successful parse
+        ///     The minimum number of bytes required for a successful parse
         /// </summary>
         private const int MinimumParseableBytes = 8;
 
         /// <summary>
-        /// The parent layer of this packet
+        ///     The parent layer of this packet
         /// </summary>
         private IPacket container;
 
         /// <summary>
-        ///     Constructs am uninitialized packet
+        ///     Constructs an uninitialized packet
         /// </summary>
-        internal ARP()           
+        internal ARP()
         {
         }
 
-        
         /// <summary>
         ///     Gets or sets the Link Layer protocol type. Example: Ethernet is 1.
         /// </summary>
@@ -88,60 +87,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         ///     Gets the payload contained within this packet
         /// </summary>
         public IPacket Payload => null;
-
-        /// <summary>
-        ///     Attempts to parse raw data into a structured packet
-        /// </summary>
-        /// <param name="buffer">Raw data to parse</param>
-        /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
-        /// <param name="index">The index into the buffer at which the packet begins</param>
-        /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
-        {
-            try
-            {
-                if (count < MinimumParseableBytes)
-                {
-                    packet = null;
-                    return false;
-                }
-
-                using (var ms = new MemoryStream(buffer,index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        packet = new ARP();
-                        packet.HType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.PType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.HLen = br.ReadByte();
-                        packet.PLen = br.ReadByte();
-                        packet.Operation = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        if (count < (6 + (packet.HLen * 2) + (packet.PLen * 2)))
-                        {
-                            packet.SenderHardwareAddress = new byte[packet.HLen];
-                            packet.SenderProtocolAddress = new byte[packet.PLen];
-                            packet.TargetHardwareAddress = new byte[packet.HLen];
-                            packet.TargetProtocolAddress = new byte[packet.PLen];
-                        }
-                        else
-                        {
-                            packet.SenderHardwareAddress = br.ReadBytes(packet.HLen);
-                            packet.SenderProtocolAddress = br.ReadBytes(packet.PLen);
-                            packet.TargetHardwareAddress = br.ReadBytes(packet.HLen);
-                            packet.TargetProtocolAddress = br.ReadBytes(packet.PLen);
-                        }
-
-                        return true;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                packet = null;
-                return false;
-            }
-        }
 
         /// <summary>
         ///     Set the enclosing packet
@@ -205,6 +150,60 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
             this.HLen = (byte)this.SenderHardwareAddress.Length;
             this.PLen = (byte)this.SenderProtocolAddress.Length;
+        }
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="buffer">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <param name="count">The length of the packet in bytes</param>
+        /// <param name="index">The index into the buffer at which the packet begins</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        internal static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
+        {
+            try
+            {
+                if (count < MinimumParseableBytes)
+                {
+                    packet = null;
+                    return false;
+                }
+
+                using (var ms = new MemoryStream(buffer, index, count, false))
+                {
+                    using (var br = new BinaryReader(ms))
+                    {
+                        packet = new ARP();
+                        packet.HType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        packet.PType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        packet.HLen = br.ReadByte();
+                        packet.PLen = br.ReadByte();
+                        packet.Operation = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
+                        if (count < 6 + packet.HLen * 2 + packet.PLen * 2)
+                        {
+                            packet.SenderHardwareAddress = new byte[packet.HLen];
+                            packet.SenderProtocolAddress = new byte[packet.PLen];
+                            packet.TargetHardwareAddress = new byte[packet.HLen];
+                            packet.TargetProtocolAddress = new byte[packet.PLen];
+                        }
+                        else
+                        {
+                            packet.SenderHardwareAddress = br.ReadBytes(packet.HLen);
+                            packet.SenderProtocolAddress = br.ReadBytes(packet.PLen);
+                            packet.TargetHardwareAddress = br.ReadBytes(packet.HLen);
+                            packet.TargetProtocolAddress = br.ReadBytes(packet.PLen);
+                        }
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                packet = null;
+                return false;
+            }
         }
     }
 }

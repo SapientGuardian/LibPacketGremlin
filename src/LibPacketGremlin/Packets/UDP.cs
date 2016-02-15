@@ -16,7 +16,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
-    /// User Datagram Protocol
+    ///     User Datagram Protocol
     /// </summary>
     public abstract class UDP : IPacket
     {
@@ -27,27 +27,28 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         private IPacket payload;
 
         /// <summary>
-        /// Gets or sets the sender's port.
+        ///     Gets or sets the sender's port.
         /// </summary>
         public UInt16 SourcePort { get; set; }
 
         /// <summary>
-        /// Gets or sets the receiver's port.
+        ///     Gets or sets the receiver's port.
         /// </summary>
         public UInt16 DestPort { get; set; }
 
         /// <summary>
-        /// Gets or sets the length in bytes of the UDP header and UDP data.
+        ///     Gets or sets the length in bytes of the UDP header and UDP data.
         /// </summary>
         public UInt16 TotalLength { get; set; }
 
         /// <summary>
-        /// Gets or sets a checksum used for error-checking of the header and data. This field is optional in IPv4, and mandatory in IPv6.
+        ///     Gets or sets a checksum used for error-checking of the header and data. This field is optional in IPv4, and
+        ///     mandatory in IPv6.
         /// </summary>
         public UInt16 Checksum { get; set; }
 
         /// <summary>
-        /// Gets the payload contained within this packet.
+        ///     Gets the payload contained within this packet.
         /// </summary>
         public IPacket Payload
         {
@@ -130,7 +131,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Calculates a checksum used for error-checking of the header and data.
+        ///     Calculates a checksum used for error-checking of the header and data.
         /// </summary>
         /// <param name="header">Byte array containing the header</param>
         /// <param name="start">Starting position in the header array that actually begins the header</param>
@@ -164,7 +165,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>        
+        /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         internal static bool TryParse(byte[] buffer, int index, int count, out UDP packet)
@@ -211,7 +212,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     }
 
     /// <summary>
-    /// User Datagram Protocol
+    ///     User Datagram Protocol
     /// </summary>
     public class UDP<PayloadType> : UDP
         where PayloadType : class, IPacket
@@ -224,13 +225,12 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         /// <summary>
-        /// Gets or sets the payload contained within this packet
+        ///     Gets or sets the payload contained within this packet
         /// </summary>
         public new PayloadType Payload
         {
             get
             {
-
                 // Should never be null or of the wrong type, because the base Setter makes it so.
                 return (PayloadType)base.Payload;
             }
