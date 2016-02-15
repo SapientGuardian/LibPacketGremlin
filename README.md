@@ -15,15 +15,19 @@ LibPacketGremlin is being excised from its original codebase iteratively. This r
 * ARP
 * ICMP
 * WakeOnLan
+* 802.11 Beacons
+  * Partial support for MS vendor tags
+  * SSID tag
+* IEEE 802.11
+* LLC
+* IEEE 802.1x
+  * EAPoL Keys
+* SNAP
+* MSMon 802.11
 
 Not yet ported...
 
-* IEEE 802.1x
-* IEEE 802.11
-* LLC
-* MSMon 802.11
 * Radiotap
-* SNAP
 * TCP
 
 ## Examples
@@ -77,6 +81,14 @@ As such, there may be some portions which were copied from Internet sources with
 I've done my best to hunt these down, but apologies to anyone whose code shows up without it. If you recognize any such code, please file an issue.
 
 Nearly all XML documentation descriptions for packet fields were taken from Wikipedia.
+
+Most of the test data for 802.11 decryption use packets collected by @drspangle.
+
+Most of the code for wireless decryption was either inspired by or directly ported from the Aircrack-ng project.
+
+Additional resources for wireless decryption: http://outbreaklabs.com/v2/post/wifi-decryption-resources-and-test-data
+
+RC4 implementation was taken from http://www.idrix.fr/Root/Samples/rc4_derive_dotnet.cs
 
 ## License
 LibPacketGremlin is released under the MIT license.

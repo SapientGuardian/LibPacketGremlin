@@ -62,8 +62,6 @@
             using (var ms = new MemoryStream())
             {
                 packet.WriteToStream(ms);
-                var x = ms.ToArray();
-                x.ToString();
                 ms.ToArray()
                     .SequenceEqual(
                         new byte[]

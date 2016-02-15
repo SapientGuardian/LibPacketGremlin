@@ -199,3 +199,4 @@ FakesAssemblies/
 /src/Watchtower/wwwroot/scripts/compiled
 Report
 /test/DSNextTests/coverage.xml
+/src/LibPacketGremlin/project.lock.json
