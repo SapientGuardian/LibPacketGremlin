@@ -82,7 +82,7 @@ I've done my best to hunt these down, but apologies to anyone whose code shows u
 
 Nearly all XML documentation descriptions for packet fields were taken from Wikipedia.
 
-Most of the test data for 802.11 decryption use packets collected by @drspangle.
+Most of the test data for 802.11 decryption use packets collected by [Daniel Smullen](http://www.daniel-smullen.com/).
 
 Most of the code for wireless decryption was either inspired by or directly ported from the Aircrack-ng project.
 
