@@ -6,8 +6,8 @@
   "projectUrl": "https://github.com/SapientGuardian/LibPacketGremlin",
   "licenseUrl": "http://opensource.org/licenses/MIT",
   "frameworks": {
-    "net46": { },
-    "net461": { },
+    "net46": {},
+    "net461": {},
     "dotnet54": {
       "dependencies": {
         "Microsoft.CSharp": "4.0.1-beta-23516",
@@ -16,10 +16,13 @@
         "System.Runtime": "4.0.21-beta-23516",
         "System.Threading": "4.0.11-beta-23516",
         "System.Net.Utilities": "4.0.0-beta-23516",
-        "System.Collections.Specialized": "4.0.1-beta-23516"
+        "System.Collections.Specialized": "4.0.1-beta-23516"        
       }
     }
   },
   "dependencies": {
+    "System.Security.Cryptography.Algorithms": "4.0.0-beta-23516",
+    "System.Reflection.TypeExtensions": "4.1.0-beta-23516",
+    "Crc32": "1.0.1-beta-3"
   }
 }
