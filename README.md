@@ -24,10 +24,10 @@ LibPacketGremlin is being excised from its original codebase iteratively. This r
   * EAPoL Keys
 * SNAP
 * MSMon 802.11
+* Radiotap
 
 Not yet ported...
 
-* Radiotap
 * TCP
 
 ## Examples
