@@ -5,9 +5,11 @@
   "tags": [ "packet", "packets" ],
   "projectUrl": "https://github.com/SapientGuardian/LibPacketGremlin",
   "licenseUrl": "http://opensource.org/licenses/MIT",
+  "iconUrl": "https://raw.githubusercontent.com/SapientGuardian/LibPacketGremlin/master/resources/Gremlin64x64.png",
+  "copyright": "Copyright © 2016 Outbreak Labs",
   "frameworks": {
-    "net46": {},
-    "net461": {},
+    "net46": { },
+    "net461": { },
     "dotnet54": {
       "dependencies": {
         "Microsoft.CSharp": "4.0.1-beta-23516",
@@ -16,7 +18,7 @@
         "System.Runtime": "4.0.21-beta-23516",
         "System.Threading": "4.0.11-beta-23516",
         "System.Net.Utilities": "4.0.0-beta-23516",
-        "System.Collections.Specialized": "4.0.1-beta-23516"        
+        "System.Collections.Specialized": "4.0.1-beta-23516"
       }
     }
   },

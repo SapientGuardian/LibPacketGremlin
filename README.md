@@ -1,4 +1,4 @@
-# LibPacketGremlin
+# LibPacketGremlin ![LibPacketGremlin](https://raw.githubusercontent.com/SapientGuardian/LibPacketGremlin/master/resources/GremlinBig.png)
 ## Description
 LibPacketGremlin is a library for manipulating packets on the .NET platform
 
