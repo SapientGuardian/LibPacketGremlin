@@ -200,3 +200,4 @@ FakesAssemblies/
 Report
 /test/DSNextTests/coverage.xml
 /src/LibPacketGremlin/project.lock.json
+/test/LibPacketGremlinTests/project.lock.json

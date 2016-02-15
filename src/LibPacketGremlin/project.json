@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.0-beta-2",
   "description": "Library for manipulating packets",
   "authors": [ "Noah Potash" ],
   "tags": [ "packet", "packets" ],
@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "System.Security.Cryptography.Algorithms": "4.0.0-beta-23516",
-    "System.Reflection.TypeExtensions": "4.1.0-beta-23516",
-    "Crc32": "1.0.1-beta-3"
+    "System.Reflection.TypeExtensions": "4.1.0-beta-23516"    
   }
 }

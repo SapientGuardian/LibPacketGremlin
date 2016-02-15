@@ -87,5 +87,7 @@ Additional resources for wireless decryption: http://outbreaklabs.com/v2/post/wi
 
 RC4 implementation was taken from http://www.idrix.fr/Root/Samples/rc4_derive_dotnet.cs
 
+CRC32 implementation was taken from https://github.com/dariogriffo/Crc32
+
 ## License
 LibPacketGremlin is released under the MIT license.

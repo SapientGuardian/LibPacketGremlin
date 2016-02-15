@@ -13,8 +13,6 @@ namespace OutbreakLabs.LibPacketGremlin.Utilities
     using System.Security.Cryptography;
     using System.Text;
 
-    using Crc32;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Extensions;
     using OutbreakLabs.LibPacketGremlin.PacketFactories;
