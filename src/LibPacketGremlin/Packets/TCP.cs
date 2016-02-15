@@ -413,7 +413,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         packet.WindowSize = windowSize;
                         packet.Checksum = checksum;
                         packet.UrgentPointer = urgentPointer;
-                        packet.OptionsAndPadding = optionsAndPadding;
+                        packet.OptionsAndPadding = optionsAndPadding ?? Array.Empty<byte>();
 
                         return true;
                     }
