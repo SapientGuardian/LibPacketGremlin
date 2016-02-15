@@ -3,32 +3,29 @@
 LibPacketGremlin is a library for manipulating packets on the .NET platform
 
 ## Motivation
-LibPacketGremlin is a port of the core of PacketGremlin, an unreleased packet analyzer originally developed on .NET 2.0 that has gone through several refinements.
+LibPacketGremlin is a port of the core of PacketGremlin, an unreleased packet analyzer originally developed in 2006 that has gone through several refinements.
 There exist other libraries for manipulating packets on .NET, but none that embrace generics to provide the sort of usage patterns that this library does.
 
 ## Status
-LibPacketGremlin is being excised from its original codebase iteratively. This release includes support for...
+LibPacketGremlin Supports the following packet types:
 
-* Ethernet II
-* IPv4
-* UDP
 * ARP
+* Ethernet II
 * ICMP
-* WakeOnLan
-* 802.11 Beacons
+* IEEE 802.11
+* IEEE 802.11 Beacons
   * Partial support for MS vendor tags
   * SSID tag
-* IEEE 802.11
-* LLC
 * IEEE 802.1x
   * EAPoL Keys
-* SNAP
+* IPv4
+* LLC
 * MSMon 802.11
 * Radiotap
-
-Not yet ported...
-
+* SNAP
 * TCP
+* UDP
+* WakeOnLan
 
 ## Examples
 
