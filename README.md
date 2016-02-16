@@ -27,6 +27,9 @@ LibPacketGremlin Supports the following packet types:
 * UDP
 * WakeOnLan
 
+## Where to get it
+LibPacketGremlin is available on [NuGet](https://www.nuget.org/packages/LibPacketGremlin/).
+
 ## Examples
 
 ### Parsing a byte array with TryParse
