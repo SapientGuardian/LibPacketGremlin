@@ -80,7 +80,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <returns>Length of the packet</returns>
         public long Length()
         {
-            return 6 + 16 + (this.Password?.Length ?? 0);
+            return 6 + (16 * 6) + (this.Password?.Length ?? 0);
         }
 
         /// <summary>

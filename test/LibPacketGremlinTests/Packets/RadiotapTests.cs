@@ -45,5 +45,16 @@
             }
         }
 
+        [Fact]
+        public void CalculatesLength()
+        {
+            byte[] rawBytes = System.IO.File.ReadAllBytes("Resources\\radiotap.bin");
+            Radiotap packet;
+            var parseResult = RadiotapFactory.Instance.TryParse(rawBytes, out packet);
+
+            parseResult.Should().BeTrue();
+
+            packet.Length().Should().Be(packet.ToArray().Length);
+        }
     }
 }
