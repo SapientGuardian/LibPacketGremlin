@@ -40,11 +40,14 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <returns>A Packet with default values</returns>
         public TCP<T> Default<T>(T payload) where T : class, IPacket
         {
-            return new TCP<T>
+            var packet = new TCP<T>
                        {
                 OptionsAndPadding = Array.Empty<byte>(),
                 Payload = payload
                        };
+
+            packet.CorrectFields();
+            return packet;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     /// </summary>
     public abstract class IEEE802_1x : IPacket
     {
-        private const int MinimumParseableBytes = 8;
+        private const int MinimumParseableBytes = 4;
 
         protected UInt16 _BodyLength;
 

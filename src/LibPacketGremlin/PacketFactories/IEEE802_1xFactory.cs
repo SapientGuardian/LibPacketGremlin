@@ -38,7 +38,9 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <returns>A Packet with default values</returns>
         public IEEE802_1x<T> Default<T>(T payload) where T : class, IPacket
         {
-            return new IEEE802_1x<T> { Payload = payload };
+            var packet = new IEEE802_1x<T> { Payload = payload };
+            packet.CorrectFields();
+            return packet;
         }
     }
 }
