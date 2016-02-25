@@ -27,6 +27,14 @@ LibPacketGremlin Supports the following packet types:
 * UDP
 * WakeOnLan
 
+Beyond basic packet support, it also has some WiFi cryptography functionality:
+
+* WEP Decryption
+* CCMP Decryption
+* WPA2 PTK Validation
+* WPA2 PTK Calculation
+* WPA2 PMK Calculation
+
 ## Where to get it
 LibPacketGremlin is available on [NuGet](https://www.nuget.org/packages/LibPacketGremlin/).
 
