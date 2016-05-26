@@ -126,7 +126,7 @@ namespace OutbreakLabs.LibPacketGremlin.Utilities
         protected override byte[] HashFinal()
         {
             var hashBuffer = UintToBigEndianBytes(~this._hash);
-#if !DOTNET5_4
+#if !NETSTANDARD1_3
             this.HashValue = hashBuffer;
 #endif
             return hashBuffer;

@@ -1,26 +1,25 @@
 {
   "version": "1.0.0-*",
-  "description": "LibPacketGremlinTests Class Library",
-  "authors": [ "SapientGuardian" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
+
   "dependencies": {
-    "FluentAssertions": "4.0.0-beta0001",    
-    "Microsoft.Dnx.TestHost": "1.0.0-rc1-final",
-    "Microsoft.Dnx.Testing.Abstractions": "1.0.0-rc1-final",
+    "Microsoft.NETCore.App": {
+      "version": "1.0.0-rc2-3002702",
+      "type": "platform"
+    },
     "xunit": "2.1.0",
-    "xunit.runner.dnx": "2.1.0-rc1-build204",
-    "LibPacketGremlin": ""
+    "dotnet-test-xunit": "1.0.0-*",
+    "FluentAssertions": "4.6.1",
+    "LibPacketGremlin": "1.0.0-rc2-*"
   },
-  "commands": {
-    "test": "xunit.runner.dnx"
-  },
+
   "frameworks": {
-    "dnx46": {
-      "frameworkAssemblies": {
-        "System.Runtime": "4.0.0.0"
-      }
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ]
     }
-  }
+  },
+  "testRunner": "xunit"
 }

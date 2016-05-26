@@ -1,4 +1,9 @@
 # LibPacketGremlin ![LibPacketGremlin](https://raw.githubusercontent.com/SapientGuardian/LibPacketGremlin/master/resources/GremlinBig.png)
+
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/qyts6uw1t19m3wck?svg=true)](https://ci.appveyor.com/project/SapientGuardian/LibPacketGremlin)<br />
+[![Linux/OSX Build Status](https://travis-ci.org/SapientGuardian/LibPacketGremlin.png)](https://travis-ci.org/SapientGuardian/LibPacketGremlin)<br />
+[![NuGet Package](https://img.shields.io/nuget/vpre/LibPacketGremlin.svg)](https://www.nuget.org/packages/LibPacketGremlin/)
+
 ## Description
 LibPacketGremlin is a library for manipulating packets on the .NET platform
 

@@ -254,9 +254,10 @@ namespace OutbreakLabs.LibPacketGremlin.Utilities
         {
             var pbkdf2 = new Rfc2898DeriveBytes(psk, /*ssid*/new byte[8], 4096);
             // This reflection crap is required because there's an arbitrary restriction that the salt must be at least 8 bytes
-            var saltProp = pbkdf2.GetType().GetField("m_salt", BindingFlags.NonPublic | BindingFlags.Instance);
+            var oldSaltProp = pbkdf2.GetType().GetField("m_salt", BindingFlags.NonPublic | BindingFlags.Instance);
+            var newSaltProp = pbkdf2.GetType().GetField("_salt", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            saltProp.SetValue(pbkdf2, ssid);
+            (oldSaltProp ?? newSaltProp).SetValue(pbkdf2, ssid);
 
             // pbkdf2.Reset(); //To officially complete the reflection trick, the private method Initialize() should be called. That's all Reset() does. 
             // But I don't think it's needed because we haven't hashed anything yet.

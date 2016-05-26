@@ -15,7 +15,8 @@
         [Fact]
         public void ParsesBasicFields()
         {
-            byte[] rawBytes = System.IO.File.ReadAllBytes("Resources\\radiotap.bin");
+            
+            byte[] rawBytes = System.IO.File.ReadAllBytes(Path.Combine("Resources","radiotap.bin"));
             Radiotap packet;
             var parseResult = RadiotapFactory.Instance.TryParse(rawBytes, out packet);
 
@@ -30,7 +31,7 @@
         [Fact]
         public void SerializesCorrectly()
         {
-            byte[] rawBytes = System.IO.File.ReadAllBytes("Resources\\radiotap.bin");
+            byte[] rawBytes = System.IO.File.ReadAllBytes(Path.Combine("Resources","radiotap.bin"));
 
             Radiotap packet;
             var parseResult = RadiotapFactory.Instance.TryParse(rawBytes, out packet);
@@ -48,7 +49,7 @@
         [Fact]
         public void CalculatesLength()
         {
-            byte[] rawBytes = System.IO.File.ReadAllBytes("Resources\\radiotap.bin");
+            byte[] rawBytes = System.IO.File.ReadAllBytes(Path.Combine("Resources","radiotap.bin"));
             Radiotap packet;
             var parseResult = RadiotapFactory.Instance.TryParse(rawBytes, out packet);
 
