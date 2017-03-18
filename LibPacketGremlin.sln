@@ -1,22 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{61C6CCBC-2613-4FF6-93B0-533746A87808}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85C76C2E-90E5-4E11-A66F-85766B027EBE}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
 		NuGet.Config = NuGet.Config
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "LibPacketGremlin", "src\LibPacketGremlin\LibPacketGremlin.xproj", "{EB4C9272-709A-421D-931A-4BA74086A8A7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{6ADCDE7C-AC29-4AD4-8C75-85A0A02900F4}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "LibPacketGremlinTests", "test\LibPacketGremlinTests\LibPacketGremlinTests.xproj", "{1E6E6DD7-A211-4985-A3C1-60488CB08709}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibPacketGremlin", "src\LibPacketGremlin\LibPacketGremlin.csproj", "{EB4C9272-709A-421D-931A-4BA74086A8A7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibPacketGremlinTests", "test\LibPacketGremlinTests\LibPacketGremlinTests.csproj", "{1E6E6DD7-A211-4985-A3C1-60488CB08709}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
