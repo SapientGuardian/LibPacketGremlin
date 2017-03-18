@@ -1,10 +1,14 @@
-version: 1.0.0-rc2-{build}
-image: Visual Studio 2015
+version: 1.0.0-{build}
+image: Visual Studio 2017
+install:
+- appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/v4.0.0/nuget.exe
 build_script:
 - cmd: >-
-    dotnet restore -v Warning	
+    dotnet restore
 
     dotnet pack .\src\LibPacketGremlin -o .\artifacts\LibPacketGremlin -c Release
+    
+    move .\src\LibPacketGremlin\artifacts .\
 test_script:
 - cmd: >-
     cd test\LibPacketGremlinTests

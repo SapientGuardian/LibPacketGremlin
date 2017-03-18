@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Library for manipulating packets</Description>
+    <Copyright>Copyright © 2016 Outbreak Labs</Copyright>
+    <VersionPrefix>1.0.0-rc2-001</VersionPrefix>
+    <Authors>Noah Potash</Authors>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <AssemblyName>LibPacketGremlin</AssemblyName>
+    <OutputType>Library</OutputType>
+    <PackageId>LibPacketGremlin</PackageId>
+    <PackageTags>packet;packets</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/SapientGuardian/LibPacketGremlin/master/resources/Gremlin64x64.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/SapientGuardian/LibPacketGremlin</PackageProjectUrl>
+    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>0.1.0.1</AssemblyVersion>
+    <FileVersion>0.1.0.1</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Linq" Version="4.3.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>
