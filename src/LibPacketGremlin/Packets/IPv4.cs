@@ -235,7 +235,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             this.HeaderLength = 5 + this.OptionsAndPadding.Length / 4;
             this.TotalLength = (ushort)(this.HeaderLength * 4 + this.Payload.Length());
 
-            // TODO: Add TCP when ported over
+            
             if (this.Payload is IPv4)
             {
                 this.Protocol = (byte)Protocols.IP;
@@ -247,6 +247,10 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             else if (this.Payload is ICMP)
             {
                 this.Protocol = (byte)Protocols.ICMP;
+            }
+            else if (this.Payload is TCP)
+            {
+                this.Protocol = (byte)Protocols.TCP;
             }
 
             this.HeaderChecksum = 0;
@@ -382,7 +386,19 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                                 }
 
                                 break;
-                            // TODO: Add TCP when ported over
+                            case (byte)Protocols.TCP:
+                                {
+                                    TCP payload;
+                                    if (TCP.TryParse(
+                                        buffer,
+                                        index + (int)br.BaseStream.Position,
+                                        payloadLength,
+                                        out payload))
+                                    {
+                                        packet = new IPv4<TCP> { Payload = payload };
+                                    }
+                                }
+                                break;
                         }
 
                         if (packet == null)

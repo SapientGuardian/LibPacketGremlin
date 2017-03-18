@@ -11,6 +11,9 @@
     using Xunit;
     using OutbreakLabs.LibPacketGremlin.PacketFactories;
     using OutbreakLabs.LibPacketGremlin.Extensions;
+    using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
+
     public class IPv4Tests
     {
         [Fact]
@@ -43,7 +46,7 @@
             packet.HeaderChecksum.Should().Be(46798);
             packet.SourceAddress.Should().Be(IPv4Address.Parse("192.168.1.3"));
             packet.DestAddress.Should().Be(IPv4Address.Parse("192.168.1.123"));
-            
+
         }
 
         [Fact]
@@ -58,7 +61,7 @@
             0x9f, 0xd8, 0xb7, 0xc4, 0xc5, 0xa6, 0x07, 0x36, 0xca, 0xce, 0x11, 0x3b,
             0x32, 0xcd, 0x87, 0x1c, 0x24, 0x2d, 0xad, 0x15, 0xc4, 0x0f}, out packet).Should().BeTrue();
 
-            
+
             using (var ms = new MemoryStream())
             {
                 packet.WriteToStream(ms);
@@ -117,6 +120,17 @@
 
             packet.Length().Should().Be(packet.ToArray().Length);
 
+        }
+
+        [Fact]
+        public void ChainsToTCP()
+        {
+            byte[] rawBytes = System.IO.File.ReadAllBytes(Path.Combine("Resources", "msmon80211tcp.bin"));
+            IPacket encryptedPacket;
+            var parsed = MSMon802_11Factory.Instance.TryParse(rawBytes, out encryptedPacket);
+            IPacket decrypted;
+            IEEE802_11Crypto.TryDecryptWEP(encryptedPacket.Layer<IEEE802_11>(), new byte[] { 0xC5, 0x8D, 0xB1, 0x5E, 0x2B }, out decrypted);
+            decrypted.Layer<TCP>().Should().NotBeNull();
         }
     }
 }

@@ -31,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\msmon80211tcp.bin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\radiotap.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
