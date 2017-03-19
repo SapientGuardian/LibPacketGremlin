@@ -62,14 +62,5 @@
             parseResult.Should().BeTrue();
             packet.Length().Should().Be(packet.ToArray().Length);
         }
-
-        [Fact]
-        public void SerializesCorrectly2()
-        {
-            var rawBytes = System.IO.File.ReadAllBytes("c:\\out.bin");
-            IPacket packet;
-            MSMon802_11Factory.Instance.TryParse(rawBytes, out packet);
-            packet.ToArray().SequenceEqual(rawBytes).Should().BeTrue();
-        }
     }
 }
