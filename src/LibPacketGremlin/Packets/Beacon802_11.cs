@@ -14,6 +14,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
 
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     /// 802.11 beacon, containing information about a network
@@ -176,7 +177,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                                     break;
                                 case (byte)ManagementTagTypes.VendorSpecific:
                                     {
-                                        // We'll ask each vendor to parse. Not the most efficient solution.
+                                        /* We'll ask each vendor to parse. Not the most efficient solution.
                                         MSTag msTag;
                                         if (MSTag.TryParse(
                                             buffer,
@@ -187,17 +188,17 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                                             newTag = msTag;
                                         }
                                         else
+                                        {*/
+                                        VendorTag tag;
+                                        if (VendorTag.TryParse(
+                                            buffer,
+                                            index + (int)br.BaseStream.Position - 2,
+                                            2 + safeLength,
+                                            out tag))
                                         {
-                                            VendorTag tag;
-                                            if (VendorTag.TryParse(
-                                                buffer,
-                                                index + (int)br.BaseStream.Position - 2,
-                                                2 + safeLength,
-                                                out tag))
-                                            {
-                                                newTag = tag;
-                                            }
+                                            newTag = tag;
                                         }
+                                        /*}*/
                                     }
                                     break;
                             }

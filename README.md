@@ -19,7 +19,6 @@ LibPacketGremlin Supports the following packet types:
 * ICMP
 * IEEE 802.11
 * IEEE 802.11 Beacons
-  * Partial support for MS vendor tags
   * SSID tag
 * IEEE 802.1x
   * EAPoL Keys
