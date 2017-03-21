@@ -330,9 +330,17 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         {
             ushort word16;
             long sum = 0;
-            for (var i = start; i < length + start; i += 2)
+
+            int i;
+            for (i = start; i < length + start - 1; i += 2)
             {
                 word16 = (ushort)(((header[i] << 8) & 0xFF00) + (header[i + 1] & 0xFF));
+                sum += word16;
+            }
+
+            if (length % 2 != 0)
+            {
+                word16 = (ushort)((header[i] << 8) & 0xFF00);
                 sum += word16;
             }
 
