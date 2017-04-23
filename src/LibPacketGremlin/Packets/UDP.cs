@@ -187,13 +187,33 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                         var totalLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
                         var checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
 
-                        Generic payload;
-                        Generic.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out payload);
-                        // This can never fail, so I'm not checking the output
-                        var newPacket = new UDP<Generic>();
-                        newPacket.Payload = payload;
-                        packet = newPacket;
+                        packet = null;
 
+                        if (destPort == 53)
+                        {                            
+                            if (DNSQuery.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out DNSQuery payload))
+                            {
+                                packet = new UDP<DNSQuery> { Payload = payload };
+                            }
+                        }
+                        else if (sourcePort == 53)
+                        {                             
+                            if (DNSReply.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out DNSReply payload))
+                            {
+                                packet = new UDP<DNSReply> { Payload = payload };
+                            }
+                        }
+
+                        if (packet == null)
+                        {                            
+                            // This can never fail, so I'm not checking the output
+                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out Generic payload);
+
+                            packet = new UDP<Generic>()
+                            {
+                                Payload = payload
+                            };
+                        }
                         packet.SourcePort = sourcePort;
                         packet.DestPort = destPort;
                         packet.TotalLength = totalLength;

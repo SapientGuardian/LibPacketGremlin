@@ -30,6 +30,7 @@ LibPacketGremlin Supports the following packet types:
 * TCP
 * UDP
 * WakeOnLan
+* DNS Query and Reply, c/o [DNS](https://github.com/kapetan/dns)
 
 Beyond basic packet support, it also has some WiFi cryptography functionality:
 

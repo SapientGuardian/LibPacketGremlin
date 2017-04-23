@@ -5,7 +5,7 @@
     <Copyright>Copyright © 2016 Outbreak Labs</Copyright>
     <VersionPrefix>1.0.0-rc2-001</VersionPrefix>
     <Authors>Noah Potash</Authors>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFramework>netstandard1.5</TargetFramework>
     <AssemblyName>LibPacketGremlin</AssemblyName>
     <OutputType>Library</OutputType>
     <PackageId>LibPacketGremlin</PackageId>
@@ -14,12 +14,18 @@
     <PackageProjectUrl>https://github.com/SapientGuardian/LibPacketGremlin</PackageProjectUrl>
     <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>0.1.1.1</AssemblyVersion>
-    <FileVersion>0.1.1.1</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>0.1.2.0</AssemblyVersion>
+    <FileVersion>0.1.2.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <OutputPath>bin\Debug\netstandard1.5\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DNS" Version="2.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
