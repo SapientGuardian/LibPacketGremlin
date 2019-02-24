@@ -109,5 +109,26 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
                 return false;
             }
         }
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="buffer">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out Generic packet)
+        {
+            try
+            {
+                var data = buffer.ToArray();
+                packet = new Generic { Buffer = data };
+                return true;
+            }
+            catch (Exception)
+            {
+                packet = null;
+                return false;
+            }
+        }
     }
 }

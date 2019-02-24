@@ -71,7 +71,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         public void SetContainer(IPacket container)
-        {            
+        {
         }
 
         public void WriteToStream(Stream stream)
@@ -91,39 +91,33 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out DNSQuery packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out DNSQuery packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var messageBytes = buffer.ToArray();
+                
+                var header = Header.FromArray(messageBytes);
+                if (header.Response || header.QuestionCount == 0 ||
+                    header.AdditionalRecordCount + header.AnswerRecordCount + header.AuthorityRecordCount > 0 ||
+                    header.ResponseCode != ResponseCode.NoError)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var messageBytes = br.ReadBytes(count);
-                        var header = Header.FromArray(messageBytes);
-                        if (header.Response || header.QuestionCount == 0 ||
-                            header.AdditionalRecordCount + header.AnswerRecordCount + header.AuthorityRecordCount > 0 ||
-                            header.ResponseCode != ResponseCode.NoError)
-                        {
 
-                            packet = null;
-                            return false;
-                        }
-
-                        var questions = Question.GetAllFromArray(messageBytes, header.Size, header.QuestionCount);
-                        packet = new DNSQuery(header, questions);
-                        return true;
-                    }
+                    packet = null;
+                    return false;
                 }
+
+                var questions = Question.GetAllFromArray(messageBytes, header.Size, header.QuestionCount);
+                packet = new DNSQuery(header, questions);
+                return true;
+
             }
             catch (Exception)
             {

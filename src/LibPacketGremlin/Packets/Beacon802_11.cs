@@ -11,7 +11,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.IO;
     using System.Linq;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -131,95 +130,79 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out Beacon802_11 packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out Beacon802_11 packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                packet = new Beacon802_11();
+
+                packet.Timestamp = br.ReadUInt64LittleEndian();
+                packet.BeaconInterval = br.ReadBytes(2);
+                packet.Capabilities = br.ReadUInt16LittleEndian();
+
+                while (br.Position <= buffer.Length - 2)
                 {
-                    using (var br = new BinaryReader(ms))
+                    IManagementTag newTag = null;
+                    var tagType = br.ReadByte();
+                    var tagLength = br.ReadByte();
+                    var safeLength = Math.Min(tagLength, buffer.Length - br.Position);
+                    var tagBytes = buffer.Slice(br.Position - 2, 2 + safeLength);
+                    br.Position += safeLength;
+
+                    switch (tagType)
                     {
-                        packet = new Beacon802_11();
-
-                        packet.Timestamp = br.ReadUInt64();
-                        packet.BeaconInterval = br.ReadBytes(2);
-                        packet.Capabilities = br.ReadUInt16();
-
-                        while (br.BaseStream.Position <= count - 2)
-                        {
-                            IManagementTag newTag = null;
-                            var tagType = br.ReadByte();
-                            var tagLength = br.ReadByte();
-                            var safeLength = Math.Min(tagLength, count - (int)br.BaseStream.Position);
-                            switch (tagType)
+                        case (byte)ManagementTagTypes.SSID:
                             {
-                                case (byte)ManagementTagTypes.SSID:
-                                    {
-                                        SSIDTag tag;
-                                        if (SSIDTag.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position - 2,
-                                            2 + safeLength,
-                                            out tag))
-                                        {
-                                            newTag = tag;
-                                        }
-                                    }
-                                    break;
-                                case (byte)ManagementTagTypes.VendorSpecific:
-                                    {
-                                        /* We'll ask each vendor to parse. Not the most efficient solution.
-                                        MSTag msTag;
-                                        if (MSTag.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position - 2,
-                                            2 + safeLength,
-                                            out msTag))
-                                        {
-                                            newTag = msTag;
-                                        }
-                                        else
-                                        {*/
-                                        VendorTag tag;
-                                        if (VendorTag.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position - 2,
-                                            2 + safeLength,
-                                            out tag))
-                                        {
-                                            newTag = tag;
-                                        }
-                                        /*}*/
-                                    }
-                                    break;
+                                SSIDTag tag;
+                                if (SSIDTag.TryParse(tagBytes, out tag))
+                                {
+                                    newTag = tag;
+                                }
                             }
-
-                            if (newTag == null)
+                            break;
+                        case (byte)ManagementTagTypes.VendorSpecific:
                             {
-                                UnsupportedTag tag;
-                                UnsupportedTag.TryParse(
+                                /* We'll ask each vendor to parse. Not the most efficient solution.
+                                MSTag msTag;
+                                if (MSTag.TryParse(
                                     buffer,
                                     index + (int)br.BaseStream.Position - 2,
                                     2 + safeLength,
-                                    out tag);
-                                newTag = tag;
+                                    out msTag))
+                                {
+                                    newTag = msTag;
+                                }
+                                else
+                                {*/
+                                VendorTag tag;
+                                if (VendorTag.TryParse(tagBytes, out tag))
+                                {
+                                    newTag = tag;
+                                }
+                                /*}*/
                             }
-                            br.BaseStream.Seek(safeLength, SeekOrigin.Current);
-                            packet.Tags.Add(newTag);
-                        }
-
-                        return true;
+                            break;
                     }
+
+                    if (newTag == null)
+                    {
+                        UnsupportedTag tag;
+                        UnsupportedTag.TryParse(tagBytes, out tag);
+                        newTag = tag;
+                    }
+                    packet.Tags.Add(newTag);
                 }
+
+                return true;
+
             }
             catch (Exception)
             {

@@ -9,7 +9,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Extensions;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -115,34 +114,28 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out ICMP packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out ICMP packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        packet = new ICMP();
-                        packet.Type = br.ReadByte();
-                        packet.Code = br.ReadByte();
-                        packet.Checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.ID = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Sequence = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Data = br.ReadBytes(count - 8);
+                var br = new SpanReader(buffer);
+                packet = new ICMP();
+                packet.Type = br.ReadByte();
+                packet.Code = br.ReadByte();
+                packet.Checksum = br.ReadUInt16BigEndian();
+                packet.ID = br.ReadUInt16BigEndian();
+                packet.Sequence = br.ReadUInt16BigEndian();
+                packet.Data = br.Slice().ToArray();
 
-                        return true;
-                    }
-                }
+                return true;
+
             }
             catch (Exception)
             {

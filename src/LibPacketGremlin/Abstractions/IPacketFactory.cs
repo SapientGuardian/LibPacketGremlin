@@ -4,6 +4,8 @@
 //  </copyright>
 // -----------------------------------------------------------------------
 
+using System;
+
 namespace OutbreakLabs.LibPacketGremlin.Abstractions
 {
     /// <summary>
@@ -20,6 +22,14 @@ namespace OutbreakLabs.LibPacketGremlin.Abstractions
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         bool TryParse(byte[] buffer, int index, int count, out IPacket packet);
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="buffer">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        bool TryParse(ReadOnlySpan<byte> buffer, out IPacket packet);
     }
 
     /// <summary>
@@ -38,5 +48,13 @@ namespace OutbreakLabs.LibPacketGremlin.Abstractions
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
         bool TryParse(byte[] buffer, int index, int count, out T packet);
+
+        /// <summary>
+        ///     Attempts to parse raw data into a structured packet
+        /// </summary>
+        /// <param name="buffer">Raw data to parse</param>
+        /// <param name="packet">Parsed packet</param>
+        /// <returns>True if parsing was successful, false if it is not.</returns>
+        bool TryParse(ReadOnlySpan<byte> buffer, out T packet);
     }
 }

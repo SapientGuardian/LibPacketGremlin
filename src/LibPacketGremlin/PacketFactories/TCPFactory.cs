@@ -22,17 +22,6 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         public static readonly TCPFactory Instance = new TCPFactory();
 
         /// <summary>
-        ///     Attempts to parse raw data into a structured packet
-        /// </summary>
-        /// <param name="buffer">Raw data to parse</param>
-        /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
-        /// <returns>True if parsing was successful, false if it is not.</returns>
-        public override bool TryParse(byte[] buffer, int index, int count, out TCP packet)
-            => TCP.TryParse(buffer, index, count, out packet);
-
-        /// <summary>
         ///     Constructs a packet with default values
         /// </summary>
         /// <typeparam name="T">Payload type</typeparam>
@@ -49,5 +38,7 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
             packet.CorrectFields();
             return packet;
         }
+
+        public override bool TryParse(ReadOnlySpan<byte> buffer, out TCP packet) => TCP.TryParse(buffer, out packet);
     }
 }

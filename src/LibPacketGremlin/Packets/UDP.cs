@@ -10,7 +10,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.IO;
     using System.Net;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Extensions;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -165,63 +164,58 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out UDP packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out UDP packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var sourcePort = br.ReadUInt16BigEndian();
+                var destPort = br.ReadUInt16BigEndian();
+                var totalLength = br.ReadUInt16BigEndian();
+                var checksum = br.ReadUInt16BigEndian();
+
+                packet = null;
+                var payloadBytes = br.Slice();
+
+                if (destPort == 53)
                 {
-                    using (var br = new BinaryReader(ms))
+                    if (DNSQuery.TryParse(payloadBytes, out DNSQuery payload))
                     {
-                        var sourcePort = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var destPort = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var totalLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-
-                        packet = null;
-
-                        if (destPort == 53)
-                        {                            
-                            if (DNSQuery.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out DNSQuery payload))
-                            {
-                                packet = new UDP<DNSQuery> { Payload = payload };
-                            }
-                        }
-                        else if (sourcePort == 53)
-                        {                             
-                            if (DNSReply.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out DNSReply payload))
-                            {
-                                packet = new UDP<DNSReply> { Payload = payload };
-                            }
-                        }
-
-                        if (packet == null)
-                        {                            
-                            // This can never fail, so I'm not checking the output
-                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, count - 8, out Generic payload);
-
-                            packet = new UDP<Generic>()
-                            {
-                                Payload = payload
-                            };
-                        }
-                        packet.SourcePort = sourcePort;
-                        packet.DestPort = destPort;
-                        packet.TotalLength = totalLength;
-                        packet.Checksum = checksum;
-
-                        return true;
+                        packet = new UDP<DNSQuery> { Payload = payload };
                     }
                 }
+                else if (sourcePort == 53)
+                {
+                    if (DNSReply.TryParse(payloadBytes, out DNSReply payload))
+                    {
+                        packet = new UDP<DNSReply> { Payload = payload };
+                    }
+                }
+
+                if (packet == null)
+                {
+                    // This can never fail, so I'm not checking the output
+                    Generic.TryParse(payloadBytes, out Generic payload);
+
+                    packet = new UDP<Generic>()
+                    {
+                        Payload = payload
+                    };
+                }
+                packet.SourcePort = sourcePort;
+                packet.DestPort = destPort;
+                packet.TotalLength = totalLength;
+                packet.Checksum = checksum;
+
+                return true;
+
             }
             catch (Exception)
             {

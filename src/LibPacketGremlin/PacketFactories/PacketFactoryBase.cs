@@ -6,6 +6,7 @@
 
 namespace OutbreakLabs.LibPacketGremlin.PacketFactories
 {
+    using System;
     using OutbreakLabs.LibPacketGremlin.Abstractions;
 
     /// <summary>
@@ -23,7 +24,8 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public abstract bool TryParse(byte[] buffer, int index, int count, out T packet);
+        public virtual bool TryParse(byte[] buffer, int index, int count, out T packet)
+            => this.TryParse(buffer.AsSpan(index, count), out packet);
 
         /// <summary>
         ///     Attempts to parse raw data into a structured packet
@@ -33,10 +35,15 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        public bool TryParse(byte[] buffer, int index, int count, out IPacket packet)
+        public virtual bool TryParse(byte[] buffer, int index, int count, out IPacket packet) 
+            => this.TryParse(buffer.AsSpan(index, count), out packet);
+        
+
+        public abstract bool TryParse(ReadOnlySpan<byte> buffer, out T packet);
+        public bool TryParse(ReadOnlySpan<byte> buffer, out IPacket packet)
         {
             T parsed;
-            var result = this.TryParse(buffer, index, count, out parsed);
+            var result = this.TryParse(buffer, out parsed);
             packet = parsed;
             return result;
         }

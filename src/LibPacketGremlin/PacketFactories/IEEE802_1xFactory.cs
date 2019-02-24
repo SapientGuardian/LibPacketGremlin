@@ -6,6 +6,7 @@
 
 namespace OutbreakLabs.LibPacketGremlin.PacketFactories
 {
+    using System;
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets;
 
@@ -20,17 +21,6 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         public static readonly IEEE802_1xFactory Instance = new IEEE802_1xFactory();
 
         /// <summary>
-        ///     Attempts to parse raw data into a structured packet
-        /// </summary>
-        /// <param name="buffer">Raw data to parse</param>
-        /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
-        /// <returns>True if parsing was successful, false if it is not.</returns>
-        public override bool TryParse(byte[] buffer, int index, int count, out IEEE802_1x packet)
-            => IEEE802_1x.TryParse(buffer, index, count, out packet);
-
-        /// <summary>
         ///     Constructs a packet with default values
         /// </summary>
         /// <typeparam name="T">Payload type</typeparam>
@@ -42,5 +32,7 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
             packet.CorrectFields();
             return packet;
         }
+
+        public override bool TryParse(ReadOnlySpan<byte> buffer, out IEEE802_1x packet) => IEEE802_1x.TryParse(buffer, out packet);
     }
 }

@@ -9,8 +9,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     /// Logical Link Control
@@ -116,73 +116,60 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out LLC packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out LLC packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var dsap = br.ReadByte();
+                var ssap = br.ReadByte();
+
+                byte commandControl = 0;
+                UInt16 responseControl = 0;
+
+                if (dsap % 2 == 0)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var dsap = br.ReadByte();
-                        var ssap = br.ReadByte();
-
-                        byte commandControl = 0;
-                        UInt16 responseControl = 0;
-
-                        if (dsap % 2 == 0)
-                        {
-                            commandControl = br.ReadByte();
-                        }
-                        else if (count < 4)
-                        {
-                            packet = null;
-                            return false;
-                        }
-                        else
-                        {
-                            responseControl = br.ReadUInt16();
-                        }
-
-                        SNAP payloadSNAP;
-                        if (SNAP.TryParse(
-                            buffer,
-                            index + (int)br.BaseStream.Position,
-                            (int)(count - br.BaseStream.Position),
-                            out payloadSNAP))
-                        {
-                            packet = new LLC<SNAP> { Payload = payloadSNAP };
-                        }
-                        else
-                        {
-                            Generic payloadGeneric;
-                            Generic.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                (int)(count - br.BaseStream.Position),
-                                out payloadGeneric);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new LLC<Generic> { Payload = payloadGeneric };
-                        }
-
-                        packet.DSAP = dsap;
-                        packet.SSAP = ssap;
-                        packet.CommandControl = commandControl;
-                        packet.ResponseControl = responseControl;
-
-                        return true;
-                    }
+                    commandControl = br.ReadByte();
                 }
+                else if (buffer.Length < 4)
+                {
+                    packet = null;
+                    return false;
+                }
+                else
+                {
+                    responseControl = br.ReadUInt16LittleEndian();
+                }
+
+                var payloadBytes = br.Slice();
+                SNAP payloadSNAP;
+                if (SNAP.TryParse(payloadBytes, out payloadSNAP))
+                {
+                    packet = new LLC<SNAP> { Payload = payloadSNAP };
+                }
+                else
+                {
+                    Generic payloadGeneric;
+                    Generic.TryParse(payloadBytes, out payloadGeneric);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new LLC<Generic> { Payload = payloadGeneric };
+                }
+
+                packet.DSAP = dsap;
+                packet.SSAP = ssap;
+                packet.CommandControl = commandControl;
+                packet.ResponseControl = responseControl;
+
+                return true;
+
             }
             catch (Exception)
             {

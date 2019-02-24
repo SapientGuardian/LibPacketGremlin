@@ -10,7 +10,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.Collections.Specialized;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.DataTypes;
     using OutbreakLabs.LibPacketGremlin.Extensions;
@@ -235,7 +234,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
             this.HeaderLength = 5 + this.OptionsAndPadding.Length / 4;
             this.TotalLength = (ushort)(this.HeaderLength * 4 + this.Payload.Length());
 
-            
+
             if (this.Payload is IPv4)
             {
                 this.Protocol = (byte)Protocols.IP;
@@ -293,138 +292,124 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out IPv4 packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out IPv4 packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+
+                var br = new SpanReader(buffer);
+
+                var versionAndHeaderLen = br.ReadByte();
+                var version = versionAndHeaderLen >> 4;
+                var headerLength = versionAndHeaderLen & 0x0F;
+
+                var differentiatedServices = br.ReadByte();
+                var totalLength = br.ReadUInt16BigEndian();
+                var id = br.ReadUInt16BigEndian();
+                var flagsAndFragOff = new BitVector32(br.ReadUInt16BigEndian());
+                var ttl = br.ReadByte();
+                var protocol = br.ReadByte();
+                var headerChecksum = br.ReadUInt16BigEndian();
+                var sourceAddress = new IPv4Address(br.ReadBytes(4));
+                var destAddress = new IPv4Address(br.ReadBytes(4));
+
+                if (headerLength == 0 || (headerLength * 32 / 8 > buffer.Length))
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var versionAndHeaderLen = br.ReadByte();
-                        var version = versionAndHeaderLen >> 4;
-                        var headerLength = versionAndHeaderLen & 0x0F;
-
-                        var differentiatedServices = br.ReadByte();
-                        var totalLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var id = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var flagsAndFragOff = new BitVector32(ByteOrder.NetworkToHostOrder(br.ReadUInt16()));
-                        var ttl = br.ReadByte();
-                        var protocol = br.ReadByte();
-                        var headerChecksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var sourceAddress = new IPv4Address(br.ReadBytes(4));
-                        var destAddress = new IPv4Address(br.ReadBytes(4));
-
-                        if (headerLength == 0 || (headerLength * 32 / 8 > count))
-                        {
-                            // Specified header length is larger than available bytes
-                            packet = null;
-                            return false;
-                        }
-
-                        byte[] optionsAndPadding;
-                        if (headerLength * 32 / 8 < br.BaseStream.Position)
-                        {
-                            optionsAndPadding = br.ReadBytes(headerLength * 32 / 8 - (int)br.BaseStream.Position);
-                        }
-                        else
-                        {
-                            optionsAndPadding = Array.Empty<byte>();
-                        }
-
-                        br.BaseStream.Seek(headerLength * 32 / 8, SeekOrigin.Begin);
-
-                        // TODO: Accept option for IgnoreLength
-                        int payloadLength;
-                        if (true /*IgnoreLength*/)
-                        {
-                            payloadLength = count - (int)br.BaseStream.Position;
-                        }
-                        /*else
-                        {                            
-                            payloadLength = (totalLength - (headerLength * 32 / 8)
-                        }*/
-
-                        packet = null;
-
-                        switch (protocol)
-                        {
-                            case (byte)Protocols.UDP:
-                                {
-                                    UDP payload;
-                                    if (UDP.TryParse(
-                                        buffer,
-                                        index + (int)br.BaseStream.Position,
-                                        payloadLength,
-                                        out payload))
-                                    {
-                                        packet = new IPv4<UDP> { Payload = payload };
-                                    }
-                                }
-
-                                break;
-                            case (byte)Protocols.ICMP:
-                                {
-                                    ICMP payload;
-                                    if (ICMP.TryParse(
-                                        buffer,
-                                        index + (int)br.BaseStream.Position,
-                                        payloadLength,
-                                        out payload))
-                                    {
-                                        packet = new IPv4<ICMP> { Payload = payload };
-                                    }
-                                }
-
-                                break;
-                            case (byte)Protocols.TCP:
-                                {
-                                    TCP payload;
-                                    if (TCP.TryParse(
-                                        buffer,
-                                        index + (int)br.BaseStream.Position,
-                                        payloadLength,
-                                        out payload))
-                                    {
-                                        packet = new IPv4<TCP> { Payload = payload };
-                                    }
-                                }
-                                break;
-                        }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, payloadLength, out payload);
-                            // This can never fail, so I'm not checking the output
-                            packet = new IPv4<Generic> { Payload = payload };
-                        }
-
-                        packet.Version = version;
-                        packet.HeaderLength = headerLength;
-                        packet.DifferentiatedServices = differentiatedServices;
-                        packet.TotalLength = totalLength;
-                        packet.ID = id;
-                        packet.FlagsAndFragOff = flagsAndFragOff;
-                        packet.TTL = ttl;
-                        packet.Protocol = protocol;
-                        packet.HeaderChecksum = headerChecksum;
-                        packet.SourceAddress = sourceAddress;
-                        packet.DestAddress = destAddress;
-                        packet.OptionsAndPadding = optionsAndPadding;
-
-                        return true;
-                    }
+                    // Specified header length is larger than available bytes
+                    packet = null;
+                    return false;
                 }
+
+                byte[] optionsAndPadding;
+                if (headerLength * 32 / 8 < br.Position)
+                {
+                    optionsAndPadding = br.ReadBytes(headerLength * 32 / 8 - br.Position);
+                }
+                else
+                {
+                    optionsAndPadding = Array.Empty<byte>();
+                }
+
+                br.Position = headerLength * 32 / 8;
+
+                // TODO: Accept option for IgnoreLength
+                int payloadLength;
+                if (true /*IgnoreLength*/)
+                {
+                    payloadLength = buffer.Length - br.Position;
+                }
+                /*else
+                {                            
+                    payloadLength = (totalLength - (headerLength * 32 / 8)
+                }*/
+
+                packet = null;
+                var payloadBytes = br.Slice(payloadLength);
+
+                switch (protocol)
+                {
+                    case (byte)Protocols.UDP:
+                        {
+                            UDP payload;
+                            if (UDP.TryParse(payloadBytes, out payload))
+                            {
+                                packet = new IPv4<UDP> { Payload = payload };
+                            }
+                        }
+
+                        break;
+                    case (byte)Protocols.ICMP:
+                        {
+                            ICMP payload;
+                            if (ICMP.TryParse(payloadBytes, out payload))
+                            {
+                                packet = new IPv4<ICMP> { Payload = payload };
+                            }
+                        }
+
+                        break;
+                    case (byte)Protocols.TCP:
+                        {
+                            TCP payload;
+                            if (TCP.TryParse(payloadBytes, out payload))
+                            {
+                                packet = new IPv4<TCP> { Payload = payload };
+                            }
+                        }
+                        break;
+                }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+                    // This can never fail, so I'm not checking the output
+                    packet = new IPv4<Generic> { Payload = payload };
+                }
+
+                packet.Version = version;
+                packet.HeaderLength = headerLength;
+                packet.DifferentiatedServices = differentiatedServices;
+                packet.TotalLength = totalLength;
+                packet.ID = id;
+                packet.FlagsAndFragOff = flagsAndFragOff;
+                packet.TTL = ttl;
+                packet.Protocol = protocol;
+                packet.HeaderChecksum = headerChecksum;
+                packet.SourceAddress = sourceAddress;
+                packet.DestAddress = destAddress;
+                packet.OptionsAndPadding = optionsAndPadding;
+
+                return true;
+
+
             }
             catch (Exception)
             {

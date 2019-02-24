@@ -9,8 +9,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     /// A placeholder for unsupported tags
@@ -106,30 +106,24 @@ namespace OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="tag">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out UnsupportedTag tag)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out UnsupportedTag tag)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     tag = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        tag = new UnsupportedTag();
-                        tag.TagType = br.ReadByte();
-                        tag.TagLength = br.ReadByte();
-                        tag.TagData = br.ReadBytes(Math.Min(tag.TagLength, count - 2));
-                        return true;
-                    }
-                }
+                var br = new SpanReader(buffer);
+                tag = new UnsupportedTag();
+                tag.TagType = br.ReadByte();
+                tag.TagLength = br.ReadByte();
+                tag.TagData = br.ReadBytes(Math.Min(tag.TagLength, buffer.Length - 2));
+                return true;
+
             }
             catch (Exception)
             {

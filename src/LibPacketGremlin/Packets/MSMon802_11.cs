@@ -9,8 +9,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     ///     Wireless header added by Microsoft Network Monitor
@@ -116,75 +116,62 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out MSMon802_11 packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out MSMon802_11 packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+
+                var version = br.ReadByte();
+                var length = br.ReadUInt16LittleEndian();
+                var opMode = br.ReadUInt32LittleEndian();
+                var receiveFlags = br.ReadUInt32LittleEndian();
+                var phyID = br.ReadUInt32LittleEndian();
+                var chCenterFrequency = br.ReadUInt32LittleEndian();
+
+                var RSSI = br.ReadInt32LittleEndian();
+                var dataRate = br.ReadByte();
+
+                var timestamp = br.ReadUInt64LittleEndian();
+
+                packet = null;
+
+                // TODO: Consider parsed length
+                var payloadBytes = br.Slice();
+                IEEE802_11 payload80211;
+                if (IEEE802_11.TryParse(payloadBytes, out payload80211))
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var version = br.ReadByte();
-                        var length = br.ReadUInt16();
-                        var opMode = br.ReadUInt32();
-                        var receiveFlags = br.ReadUInt32();
-                        var phyID = br.ReadUInt32();
-                        var chCenterFrequency = br.ReadUInt32();
-
-                        var RSSI = br.ReadInt32();
-                        var dataRate = br.ReadByte();
-
-                        var timestamp = br.ReadUInt64();
-
-                        packet = null;
-
-                        // TODO: Consider parsed length
-
-                        IEEE802_11 payload80211;
-                        if (IEEE802_11.TryParse(
-                            buffer,
-                            index + (int)br.BaseStream.Position,
-                            (int)(count - br.BaseStream.Position),
-                            out payload80211))
-                        {
-                            packet = new MSMon802_11<IEEE802_11> { Payload = payload80211 };
-                        }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                (int)(count - br.BaseStream.Position),
-                                out payload);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new MSMon802_11<Generic> { Payload = payload };
-                        }
-
-                        packet.Version = version;
-                        packet.LengthMS = length;
-                        packet.OpMode = opMode;
-                        packet.ReceiveFlags = receiveFlags;
-                        packet.PhyID = phyID;
-                        packet.CenterFrequency = chCenterFrequency;
-                        packet.RSSI = RSSI;
-                        packet.DataRate = dataRate;
-                        packet.Timestamp = timestamp;
-
-                        return true;
-                    }
+                    packet = new MSMon802_11<IEEE802_11> { Payload = payload80211 };
                 }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new MSMon802_11<Generic> { Payload = payload };
+                }
+
+                packet.Version = version;
+                packet.LengthMS = length;
+                packet.OpMode = opMode;
+                packet.ReceiveFlags = receiveFlags;
+                packet.PhyID = phyID;
+                packet.CenterFrequency = chCenterFrequency;
+                packet.RSSI = RSSI;
+                packet.DataRate = dataRate;
+                packet.Timestamp = timestamp;
+
+                return true;
+
             }
             catch (Exception)
             {

@@ -9,8 +9,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     ///     A Radiotap-encapsulated frame
@@ -118,63 +118,51 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out Radiotap packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out Radiotap packet)
         {
             try
             {
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+
+                var version = br.ReadByte();
+                var pad = br.ReadByte();
+                var length = br.ReadUInt16LittleEndian();
+                var present = br.ReadUInt32LittleEndian();
+
+                if (buffer.Length - br.Position < length - 8)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var version = br.ReadByte();
-                        var pad = br.ReadByte();
-                        var length = br.ReadUInt16();
-                        var present = br.ReadUInt32();
-
-                        if (count - br.BaseStream.Position < length - 8)
-                        {
-                            packet = null;
-                            return false;
-                        }
-                        var fieldData = br.ReadBytes(length - 8);
-
-                        packet = null;
-
-                        IEEE802_11 payload80211;
-                        if (IEEE802_11.TryParse(
-                            buffer,
-                            index + (int)br.BaseStream.Position,
-                            (int)(count - br.BaseStream.Position),
-                            out payload80211))
-                        {
-                            packet = new Radiotap<IEEE802_11> { Payload = payload80211 };
-                        }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                (int)(count - br.BaseStream.Position),
-                                out payload);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new Radiotap<Generic> { Payload = payload };
-                        }
-
-                        packet.Version = version;
-                        packet.Pad = pad;
-                        packet.LengthRadiotap = length;
-                        packet.Present = present;
-                        packet.FieldData = fieldData;
-
-                        return true;
-                    }
+                    packet = null;
+                    return false;
                 }
+                var fieldData = br.ReadBytes(length - 8);
+
+                packet = null;
+                var payloadBytes = br.Slice();
+
+                IEEE802_11 payload80211;
+                if (IEEE802_11.TryParse(payloadBytes, out payload80211))
+                {
+                    packet = new Radiotap<IEEE802_11> { Payload = payload80211 };
+                }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new Radiotap<Generic> { Payload = payload };
+                }
+
+                packet.Version = version;
+                packet.Pad = pad;
+                packet.LengthRadiotap = length;
+                packet.Present = present;
+                packet.FieldData = fieldData;
+
+                return true;
+
             }
             catch (Exception)
             {

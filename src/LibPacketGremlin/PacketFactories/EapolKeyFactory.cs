@@ -6,6 +6,7 @@
 
 namespace OutbreakLabs.LibPacketGremlin.PacketFactories
 {
+    using System;
     using OutbreakLabs.LibPacketGremlin.Packets;
 
     /// <summary>
@@ -18,15 +19,6 @@ namespace OutbreakLabs.LibPacketGremlin.PacketFactories
         /// </summary>
         public static readonly EapolKeyFactory Instance = new EapolKeyFactory();
 
-        /// <summary>
-        ///     Attempts to parse raw data into a structured packet
-        /// </summary>
-        /// <param name="buffer">Raw data to parse</param>
-        /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
-        /// <returns>True if parsing was successful, false if it is not.</returns>
-        public override bool TryParse(byte[] buffer, int index, int count, out EapolKey packet)
-            => EapolKey.TryParse(buffer, index, count, out packet);
+        public override bool TryParse(ReadOnlySpan<byte> buffer, out EapolKey packet) => EapolKey.TryParse(buffer, out packet);
     }
 }

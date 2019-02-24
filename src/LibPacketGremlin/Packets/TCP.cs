@@ -11,7 +11,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.IO;
     using System.Net;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.DataTypes;
     using OutbreakLabs.LibPacketGremlin.Extensions;
@@ -23,9 +22,9 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     public abstract class TCP : IPacket
     {
         private const int MinimumParseableBytes = 20;
-        
+
         protected byte[] _OptionsAndPadding;
-        
+
         private IPacket container;
 
         protected BitVector32 Flags;
@@ -359,73 +358,64 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out TCP packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out TCP packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var sourcePort = br.ReadUInt16BigEndian();
+                var destPort = br.ReadUInt16BigEndian();
+                var seqNumber = br.ReadUInt32BigEndian();
+                var ackNumber = br.ReadUInt32BigEndian();
+                var dataOffsetAndReserved = br.ReadByte();
+                var dataOffset = dataOffsetAndReserved >> 4;
+                var reserved = dataOffsetAndReserved & 0x0F;
+                var flags = new BitVector32(br.ReadByte());
+                var windowSize = br.ReadUInt16BigEndian();
+                var checksum = br.ReadUInt16BigEndian();
+                var urgentPointer = br.ReadUInt16BigEndian();
+                byte[] optionsAndPadding = null;
+
+                if (dataOffset > 5)
                 {
-                    using (var br = new BinaryReader(ms))
+                    if (br.Position + (dataOffset - 5) * 4 > buffer.Length)
                     {
-                        var sourcePort = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var destPort = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var seqNumber = ByteOrder.NetworkToHostOrder(br.ReadUInt32());
-                        var ackNumber = ByteOrder.NetworkToHostOrder(br.ReadUInt32());
-                        var dataOffsetAndReserved = br.ReadByte();
-                        var dataOffset = dataOffsetAndReserved >> 4;
-                        var reserved = dataOffsetAndReserved & 0x0F;
-                        var flags = new BitVector32(br.ReadByte());
-                        var windowSize = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var checksum = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        var urgentPointer = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        byte[] optionsAndPadding = null;
-
-                        if (dataOffset > 5)
-                        {
-                            if (br.BaseStream.Position + (dataOffset - 5) * 4 > count)
-                            {
-                                // throw new ArgumentException("Header specifies more bytes than available");
-                                packet = null;
-                                return false;
-                            }
-                            optionsAndPadding = br.ReadBytes((dataOffset - 5) * 4);
-                        }
-
-                        Generic payload;
-                        Generic.TryParse(
-                            buffer,
-                            index + (int)br.BaseStream.Position,
-                            count - dataOffset * 32 / 8,
-                            out payload);
-                        // This can never fail, so I'm not checking the output
-                        var newPacket = new TCP<Generic>();
-                        newPacket.Payload = payload;
-                        packet = newPacket;
-
-                        packet.SourcePort = sourcePort;
-                        packet.DestPort = destPort;
-                        packet.SeqNumber = seqNumber;
-                        packet.AckNumber = ackNumber;
-                        packet.DataOffset = dataOffset;
-                        packet.Reserved = reserved;
-                        packet.Flags = flags;
-                        packet.WindowSize = windowSize;
-                        packet.Checksum = checksum;
-                        packet.UrgentPointer = urgentPointer;
-                        packet.OptionsAndPadding = optionsAndPadding ?? Array.Empty<byte>();
-
-                        return true;
+                        // throw new ArgumentException("Header specifies more bytes than available");
+                        packet = null;
+                        return false;
                     }
+                    optionsAndPadding = br.ReadBytes((dataOffset - 5) * 4);
                 }
+
+                Generic payload;
+                Generic.TryParse(br.Slice(buffer.Length- dataOffset * 32 / 8),
+                    out payload);
+                // This can never fail, so I'm not checking the output
+                var newPacket = new TCP<Generic>();
+                newPacket.Payload = payload;
+                packet = newPacket;
+
+                packet.SourcePort = sourcePort;
+                packet.DestPort = destPort;
+                packet.SeqNumber = seqNumber;
+                packet.AckNumber = ackNumber;
+                packet.DataOffset = dataOffset;
+                packet.Reserved = reserved;
+                packet.Flags = flags;
+                packet.WindowSize = windowSize;
+                packet.Checksum = checksum;
+                packet.UrgentPointer = urgentPointer;
+                packet.OptionsAndPadding = optionsAndPadding ?? Array.Empty<byte>();
+
+                return true;
+
             }
             catch (Exception)
             {

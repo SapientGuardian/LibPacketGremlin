@@ -10,7 +10,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.Collections.Specialized;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Extensions;
     using OutbreakLabs.LibPacketGremlin.Packets.IEEE802_11Support;
@@ -556,186 +555,175 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out IEEE802_11 packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out IEEE802_11 packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var frameControlVersionTypeAndSubtype = new BitVector32(br.ReadByte());
+                var frameControlFlags = new BitVector32(br.ReadByte());
+                var durationID = br.ReadUInt16LittleEndian();
+
+                var toDS = frameControlFlags[1];
+                var fromDS = frameControlFlags[2];
+
+                byte[] destination;
+                byte[] source;
+                byte[] bssid;
+                byte[] receiver = null;
+                byte[] transmitter = null;
+                UInt16 sequenceControl;
+
+                if (!toDS)
                 {
-                    using (var br = new BinaryReader(ms))
+                    destination = br.ReadBytes(6);
+
+                    if (!fromDS)
                     {
-                        var frameControlVersionTypeAndSubtype = new BitVector32(br.ReadByte());
-                        var frameControlFlags = new BitVector32(br.ReadByte());
-                        var durationID = br.ReadUInt16();
+                        source = br.ReadBytes(6);
+                        bssid = br.ReadBytes(6);
+                    }
+                    else
+                    {
+                        bssid = br.ReadBytes(6);
+                        source = br.ReadBytes(6);
+                    }
+                    sequenceControl = br.ReadUInt16LittleEndian(); //Was Big, wireshark disagrees
+                }
+                else
+                {
+                    if (!fromDS)
+                    {
+                        bssid = br.ReadBytes(6);
+                        source = br.ReadBytes(6);
+                        destination = br.ReadBytes(6);
+                        sequenceControl = br.ReadUInt16LittleEndian(); //Was Big, wireshark disagrees
+                    }
+                    else
+                    {
+                        receiver = br.ReadBytes(6);
+                        transmitter = br.ReadBytes(6);
+                        bssid = transmitter; //Per airdecap-ng
+                        destination = br.ReadBytes(6);
+                        sequenceControl = br.ReadUInt16LittleEndian(); //Was Big, wireshark disagrees
+                        source = br.ReadBytes(6);
+                    }
+                }
 
-                        var toDS = frameControlFlags[1];
-                        var fromDS = frameControlFlags[2];
+                var frameType =
+                    frameControlVersionTypeAndSubtype[BitVector32.CreateSection(3, BitVector32.CreateSection(3))
+                        ];
+                var subType =
+                    frameControlVersionTypeAndSubtype[
+                        BitVector32.CreateSection(15, BitVector32.CreateSection(15))];
 
-                        byte[] destination;
-                        byte[] source;
-                        byte[] bssid;
-                        byte[] receiver = null;
-                        byte[] transmitter = null;
-                        UInt16 sequenceControl;
+                byte[] qosControl = null;
+                if (frameType == (int)FrameTypes.Data && subType == (int)DataSubTypes.QoS)
+                {
+                    qosControl = br.ReadBytes(2);
+                }
 
-                        if (!toDS)
-                        {
-                            destination = br.ReadBytes(6);
+                var isProtected = frameControlFlags[64];
+                byte[] ccmp_WEP_Data = null;
 
-                            if (!fromDS)
-                            {
-                                source = br.ReadBytes(6);
-                                bssid = br.ReadBytes(6);
-                            }
-                            else
-                            {
-                                bssid = br.ReadBytes(6);
-                                source = br.ReadBytes(6);
-                            }
-                            sequenceControl = br.ReadUInt16(); //Was NTHO, wireshark disagrees
-                        }
-                        else
-                        {
-                            if (!fromDS)
-                            {
-                                bssid = br.ReadBytes(6);
-                                source = br.ReadBytes(6);
-                                destination = br.ReadBytes(6);
-                                sequenceControl = br.ReadUInt16(); //Was NTHO, wireshark disagrees
-                            }
-                            else
-                            {
-                                receiver = br.ReadBytes(6);
-                                transmitter = br.ReadBytes(6);
-                                bssid = transmitter; //Per airdecap-ng
-                                destination = br.ReadBytes(6);
-                                sequenceControl = br.ReadUInt16(); //Was NTHO, wireshark disagrees
-                                source = br.ReadBytes(6);
-                            }
-                        }
-
-                        var frameType =
-                            frameControlVersionTypeAndSubtype[BitVector32.CreateSection(3, BitVector32.CreateSection(3))
-                                ];
-                        var subType =
-                            frameControlVersionTypeAndSubtype[
-                                BitVector32.CreateSection(15, BitVector32.CreateSection(15))];
-
-                        byte[] qosControl = null;
-                        if (frameType == (int)FrameTypes.Data && subType == (int)DataSubTypes.QoS)
-                        {
-                            qosControl = br.ReadBytes(2);
-                        }
-
-                        var isProtected = frameControlFlags[64];
-                        byte[] ccmp_WEP_Data = null;
-
-                        if (isProtected)
-                        {
-                            if (count - br.BaseStream.Position < 4)
-                            {
-                                packet = null;
-                                return false;
-                            }
-                            var firstFour = br.ReadBytes(4);
-                            if (firstFour[3] == 0)
-                            {
-                                ccmp_WEP_Data = firstFour;
-                            }
-                            else
-                            {
-                                if (count - br.BaseStream.Position < 4)
-                                {
-                                    packet = null;
-                                    return false;
-                                }
-                                ccmp_WEP_Data = new byte[8];
-                                firstFour.CopyTo(ccmp_WEP_Data, 0);
-                                br.ReadBytes(4).CopyTo(ccmp_WEP_Data, 4);
-                            }
-                        }
-
-                        var isWep = isProtected && ccmp_WEP_Data?.Length == 4;
-
-                        if (count - br.BaseStream.Position - (isWep ? 4 : 0) < 0)
+                if (isProtected)
+                {
+                    if (buffer.Length - br.Position < 4)
+                    {
+                        packet = null;
+                        return false;
+                    }
+                    var firstFour = br.ReadBytes(4);
+                    if (firstFour[3] == 0)
+                    {
+                        ccmp_WEP_Data = firstFour;
+                    }
+                    else
+                    {
+                        if (buffer.Length - br.Position < 4)
                         {
                             packet = null;
                             return false;
                         }
-
-                        var unsafePayloadLen = count - (int)br.BaseStream.Position - (isWep ? 4 : 0);
-                        var safePayloadLen = Math.Max(0, unsafePayloadLen);
-
-                        packet = null;
-
-                        if (frameType == (int)FrameTypes.Data && ((subType & 4) != 1) && !isProtected)
-                        {
-                            LLC payload;
-                            if (LLC.TryParse(buffer, index + (int)br.BaseStream.Position, safePayloadLen, out payload))
-                            {
-                                packet = new IEEE802_11<LLC> { Payload = payload };
-                            }
-                        }
-                        else if (frameType == (int)FrameTypes.Management && subType == (int)ManagementSubTypes.Beacon)
-                        {
-                            Beacon802_11 payload;
-                            if (Beacon802_11.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                safePayloadLen,
-                                out payload))
-                            {
-                                packet = new IEEE802_11<Beacon802_11> { Payload = payload };
-                            }
-                        }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(buffer, index + (int)br.BaseStream.Position, safePayloadLen, out payload);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new IEEE802_11<Generic> { Payload = payload };
-                        }
-
-                        br.BaseStream.Seek(packet.Payload.Length(), SeekOrigin.Current);
-
-                        UInt32 wep_ICV = 0;
-                        if (isWep)
-                        {
-                            wep_ICV = ByteOrder.NetworkToHostOrder(br.ReadUInt32());
-                        }
-
-                        packet.FrameControlVersionTypeAndSubtype = frameControlVersionTypeAndSubtype;
-                        packet.FrameControlFlags = frameControlFlags;
-                        packet.DurationID = durationID;
-                        packet.Destination = destination;
-                        packet.Source = source;
-                        packet.BSSID = bssid;
-                        packet.SequenceControl = sequenceControl;
-                        packet.Receiver = receiver;
-                        packet.Transmitter = transmitter;
-                        packet.QosControl = qosControl;
-                        packet.CCMP_WEP_Data = ccmp_WEP_Data;
-                        packet.WEP_ICV = wep_ICV;
-
-                        if (br.BaseStream.Position == count - 4)
-                        {
-                            packet.FrameCheckSequence = br.ReadUInt32();
-                        }
-
-                        return true;
+                        ccmp_WEP_Data = new byte[8];
+                        firstFour.CopyTo(ccmp_WEP_Data, 0);
+                        br.ReadBytes(4).CopyTo(ccmp_WEP_Data, 4);
                     }
                 }
+
+                var isWep = isProtected && ccmp_WEP_Data?.Length == 4;
+
+                if (buffer.Length - br.Position - (isWep ? 4 : 0) < 0)
+                {
+                    packet = null;
+                    return false;
+                }
+
+                var unsafePayloadLen = buffer.Length - (int)br.Position - (isWep ? 4 : 0);
+                var safePayloadLen = Math.Max(0, unsafePayloadLen);
+                var payloadBytes = br.Slice(safePayloadLen);
+
+                packet = null;
+
+                if (frameType == (int)FrameTypes.Data && ((subType & 4) != 1) && !isProtected)
+                {
+                    LLC payload;
+                    if (LLC.TryParse(payloadBytes, out payload))
+                    {
+                        packet = new IEEE802_11<LLC> { Payload = payload };
+                    }
+                }
+                else if (frameType == (int)FrameTypes.Management && subType == (int)ManagementSubTypes.Beacon)
+                {
+                    Beacon802_11 payload;
+                    if (Beacon802_11.TryParse(payloadBytes, out payload))
+                    {
+                        packet = new IEEE802_11<Beacon802_11> { Payload = payload };
+                    }
+                }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new IEEE802_11<Generic> { Payload = payload };
+                }
+ 
+                UInt32 wep_ICV = 0;
+                if (isWep)
+                {
+                    wep_ICV = br.ReadUInt32BigEndian();
+                }
+
+                packet.FrameControlVersionTypeAndSubtype = frameControlVersionTypeAndSubtype;
+                packet.FrameControlFlags = frameControlFlags;
+                packet.DurationID = durationID;
+                packet.Destination = destination;
+                packet.Source = source;
+                packet.BSSID = bssid;
+                packet.SequenceControl = sequenceControl;
+                packet.Receiver = receiver;
+                packet.Transmitter = transmitter;
+                packet.QosControl = qosControl;
+                packet.CCMP_WEP_Data = ccmp_WEP_Data;
+                packet.WEP_ICV = wep_ICV;
+
+                if (br.Position == buffer.Length - 4)
+                {
+                    packet.FrameCheckSequence = br.ReadUInt32LittleEndian();
+                }
+
+                return true;
+
             }
             catch (Exception)
             {

@@ -9,7 +9,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets.ARPSupport;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -157,47 +156,42 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out ARP packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out ARP packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        packet = new ARP();
-                        packet.HType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.PType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.HLen = br.ReadByte();
-                        packet.PLen = br.ReadByte();
-                        packet.Operation = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        if (count < 6 + packet.HLen * 2 + packet.PLen * 2)
-                        {
-                            packet.SenderHardwareAddress = new byte[packet.HLen];
-                            packet.SenderProtocolAddress = new byte[packet.PLen];
-                            packet.TargetHardwareAddress = new byte[packet.HLen];
-                            packet.TargetProtocolAddress = new byte[packet.PLen];
-                        }
-                        else
-                        {
-                            packet.SenderHardwareAddress = br.ReadBytes(packet.HLen);
-                            packet.SenderProtocolAddress = br.ReadBytes(packet.PLen);
-                            packet.TargetHardwareAddress = br.ReadBytes(packet.HLen);
-                            packet.TargetProtocolAddress = br.ReadBytes(packet.PLen);
-                        }
 
-                        return true;
-                    }
+                var br = new SpanReader(buffer);
+
+                packet = new ARP();
+                packet.HType = br.ReadUInt16BigEndian();
+                packet.PType = br.ReadUInt16BigEndian();
+                packet.HLen = br.ReadByte();
+                packet.PLen = br.ReadByte();
+                packet.Operation = br.ReadUInt16BigEndian();
+                if (buffer.Length < 6 + packet.HLen * 2 + packet.PLen * 2)
+                {
+                    packet.SenderHardwareAddress = new byte[packet.HLen];
+                    packet.SenderProtocolAddress = new byte[packet.PLen];
+                    packet.TargetHardwareAddress = new byte[packet.HLen];
+                    packet.TargetProtocolAddress = new byte[packet.PLen];
                 }
+                else
+                {
+                    packet.SenderHardwareAddress = br.ReadBytes(packet.HLen);
+                    packet.SenderProtocolAddress = br.ReadBytes(packet.PLen);
+                    packet.TargetHardwareAddress = br.ReadBytes(packet.HLen);
+                    packet.TargetProtocolAddress = br.ReadBytes(packet.PLen);
+                }
+
+                return true;
             }
             catch (Exception)
             {

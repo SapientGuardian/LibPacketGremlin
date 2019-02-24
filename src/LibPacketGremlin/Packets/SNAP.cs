@@ -9,7 +9,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets.EthernetIISupport;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -123,89 +122,71 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out SNAP packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out SNAP packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var organizationCode = br.ReadBytes(3);
+                var etherType = br.ReadUInt16BigEndian();
+
+                packet = null;
+                var payloadBytes = br.Slice();
+
+                if (organizationCode[0] == 0 && organizationCode[1] == 0 && organizationCode[2] == 0)
                 {
-                    using (var br = new BinaryReader(ms))
+                    switch (etherType)
                     {
-                        var organizationCode = br.ReadBytes(3);
-                        var etherType = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-
-                        packet = null;
-                        if (organizationCode[0] == 0 && organizationCode[1] == 0 && organizationCode[2] == 0)
-                        {
-                            switch (etherType)
+                        case (ushort)EtherTypes.IPv4:
                             {
-                                case (ushort)EtherTypes.IPv4:
-                                    {
-                                        IPv4 payload;
-                                        if (IPv4.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position,
-                                            (int)(count - br.BaseStream.Position),
-                                            out payload))
-                                        {
-                                            packet = new SNAP<IPv4> { Payload = payload };
-                                        }
-                                    }
-                                    break;
-                                case (ushort)EtherTypes.ARP:
-                                    {
-                                        ARP payload;
-                                        if (ARP.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position,
-                                            (int)(count - br.BaseStream.Position),
-                                            out payload))
-                                        {
-                                            packet = new SNAP<ARP> { Payload = payload };
-                                        }
-                                    }
-                                    break;
-                                case (ushort)EtherTypes.EAPoLAN:
-                                    {
-                                        IEEE802_1x payload;
-                                        if (IEEE802_1x.TryParse(
-                                            buffer,
-                                            index + (int)br.BaseStream.Position,
-                                            (int)(count - br.BaseStream.Position),
-                                            out payload))
-                                        {
-                                            packet = new SNAP<IEEE802_1x> { Payload = payload };
-                                        }
-                                    }
-                                    break;
+                                IPv4 payload;
+                                if (IPv4.TryParse(payloadBytes, out payload))
+                                {
+                                    packet = new SNAP<IPv4> { Payload = payload };
+                                }
                             }
-                        }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                (int)(count - br.BaseStream.Position),
-                                out payload);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new SNAP<Generic> { Payload = payload };
-                        }
-
-                        packet.OrganizationCode = organizationCode;
-                        packet.ProtocolID = etherType;
-
-                        return true;
+                            break;
+                        case (ushort)EtherTypes.ARP:
+                            {
+                                ARP payload;
+                                if (ARP.TryParse(payloadBytes, out payload))
+                                {
+                                    packet = new SNAP<ARP> { Payload = payload };
+                                }
+                            }
+                            break;
+                        case (ushort)EtherTypes.EAPoLAN:
+                            {
+                                IEEE802_1x payload;
+                                if (IEEE802_1x.TryParse(payloadBytes, out payload))
+                                {
+                                    packet = new SNAP<IEEE802_1x> { Payload = payload };
+                                }
+                            }
+                            break;
                     }
                 }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new SNAP<Generic> { Payload = payload };
+                }
+
+                packet.OrganizationCode = organizationCode;
+                packet.ProtocolID = etherType;
+
+                return true;
+
             }
             catch (Exception)
             {

@@ -126,7 +126,7 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         }
 
         public void SetContainer(IPacket container)
-        {            
+        {
         }
 
         public void WriteToStream(Stream stream)
@@ -158,54 +158,47 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out DNSReply packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out DNSReply packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var messageBytes = buffer.ToArray();
+                var header = Header.FromArray(messageBytes);
+                int offset = header.Size;
+
+                if (!header.Response || header.QuestionCount == 0)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var messageBytes = br.ReadBytes(count);
-                        var header = Header.FromArray(messageBytes);
-                        int offset = header.Size;
-
-                        if (!header.Response || header.QuestionCount == 0)
-                        {
-                            packet = null;
-                            return false;
-                        }
-
-                        
-                        if (header.Truncated)
-                        {
-                            packet = new DNSReply(header,
-                                Question.GetAllFromArray(messageBytes, offset, header.QuestionCount),
-                                new List<IResourceRecord>(),
-                                new List<IResourceRecord>(),
-                                new List<IResourceRecord>());
-                        }
-                        else
-                        {
-                            packet = new DNSReply(header,
-                                    Question.GetAllFromArray(messageBytes, offset, header.QuestionCount, out offset),
-                                    ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AnswerRecordCount, out offset),
-                                    ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AuthorityRecordCount, out offset),
-                                    ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AdditionalRecordCount, out offset));
-                        }
-                        
-                        return true;
-                    }
+                    packet = null;
+                    return false;
                 }
+
+
+                if (header.Truncated)
+                {
+                    packet = new DNSReply(header,
+                        Question.GetAllFromArray(messageBytes, offset, header.QuestionCount),
+                        new List<IResourceRecord>(),
+                        new List<IResourceRecord>(),
+                        new List<IResourceRecord>());
+                }
+                else
+                {
+                    packet = new DNSReply(header,
+                            Question.GetAllFromArray(messageBytes, offset, header.QuestionCount, out offset),
+                            ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AnswerRecordCount, out offset),
+                            ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AuthorityRecordCount, out offset),
+                            ResourceRecordFactory.GetAllFromArray(messageBytes, offset, header.AdditionalRecordCount, out offset));
+                }
+
+                return true;
+
             }
             catch (Exception)
             {

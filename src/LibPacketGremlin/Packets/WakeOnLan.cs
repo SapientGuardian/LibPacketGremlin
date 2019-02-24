@@ -10,8 +10,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System.IO;
     using System.Linq;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     ///     Wake On LAN is used to turn on a device over a network
@@ -120,68 +120,65 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// <param name="count">The length of the packet in bytes</param>
         /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out WakeOnLan packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out WakeOnLan packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
                 // Too many bytes
-                if (count > 108)
+                if (buffer.Length > 108)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+
+                var br = new SpanReader(buffer);
+                for (var i = 0; i < 6; i++)
                 {
-                    using (var br = new BinaryReader(ms))
+                    if (br.ReadByte() != 255)
                     {
-                        for (var i = 0; i < 6; i++)
-                        {
-                            if (br.ReadByte() != 255)
-                            {
-                                // TODO: Option to ignore
-                                // Invalid synchronization stream.
-                                packet = null;
-                                return false;
-                            }
-                        }
-
-                        packet = new WakeOnLan();
-                        packet.DstMac = br.ReadBytes(6);
-                        for (var i = 0; i < 15; i++)
-                        {
-                            var tmpMac = br.ReadBytes(6);
-                            if (!tmpMac.SequenceEqual(packet.DstMac))
-                            {
-                                // TODO: Option to ignore
-                                // Invalid target mac repetition
-                                packet = null;
-                                return false;
-                            }
-                        }
-
-                        if (count - br.BaseStream.Position >= 6)
-                        {
-                            packet.Password = br.ReadBytes(6);
-                        }
-                        else if (count - br.BaseStream.Position >= 4)
-                        {
-                            packet.Password = br.ReadBytes(4);
-                        }
-                        else
-                        {
-                            packet.Password = Array.Empty<byte>();
-                        }
-
-                        return true;
+                        // TODO: Option to ignore
+                        // Invalid synchronization stream.
+                        packet = null;
+                        return false;
                     }
                 }
+
+                packet = new WakeOnLan();
+                packet.DstMac = br.ReadBytes(6);
+                for (var i = 0; i < 15; i++)
+                {
+                    var tmpMac = br.ReadBytes(6);
+                    if (!tmpMac.SequenceEqual(packet.DstMac))
+                    {
+                        // TODO: Option to ignore
+                        // Invalid target mac repetition
+                        packet = null;
+                        return false;
+                    }
+                }
+
+                if (buffer.Length - br.Position >= 6)
+                {
+                    packet.Password = br.ReadBytes(6);
+                }
+                else if (buffer.Length - br.Position >= 4)
+                {
+                    packet.Password = br.ReadBytes(4);
+                }
+                else
+                {
+                    packet.Password = Array.Empty<byte>();
+                }
+
+                return true;
+
             }
             catch (Exception)
             {

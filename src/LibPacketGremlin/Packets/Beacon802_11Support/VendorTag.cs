@@ -9,8 +9,8 @@ namespace OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
+    using OutbreakLabs.LibPacketGremlin.Utilities;
 
     /// <summary>
     /// Placeholder for unsupported vendor tags
@@ -132,36 +132,30 @@ namespace OutbreakLabs.LibPacketGremlin.Packets.Beacon802_11Support
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="tag">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out VendorTag tag)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out VendorTag tag)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     tag = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                tag = new VendorTag();
+                var tagType = br.ReadByte();
+                if (tagType != 0xdd)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        tag = new VendorTag();
-                        var tagType = br.ReadByte();
-                        if (tagType != 0xdd)
-                        {
-                            tag = null;
-                            return false;
-                        }
-                        tag.TagLength = br.ReadByte();
-                        tag.OUI = br.ReadBytes(3);
-                        tag.TagData = br.ReadBytes(Math.Min(tag.TagLength, count - 5));
-                        return true;
-                    }
+                    tag = null;
+                    return false;
                 }
+                tag.TagLength = br.ReadByte();
+                tag.OUI = br.ReadBytes(3);
+                tag.TagData = br.ReadBytes(Math.Min(tag.TagLength, buffer.Length - 5));
+                return true;
+
             }
             catch (Exception)
             {

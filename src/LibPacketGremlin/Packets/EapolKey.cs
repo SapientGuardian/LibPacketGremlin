@@ -9,7 +9,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Utilities;
 
@@ -262,39 +261,33 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out EapolKey packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out EapolKey packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
-                {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        packet = new EapolKey();
-                        packet.KeyDescriptorType = br.ReadByte();
-                        packet.KeyInformation = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.KeyLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.ReplayCounter = br.ReadBytes(8);
-                        packet.Nonce = br.ReadBytes(32);
-                        packet.IV = br.ReadBytes(16);
-                        packet.RSC = br.ReadBytes(8);
-                        packet.ID = br.ReadBytes(8);
-                        packet.MIC = br.ReadBytes(16);
-                        packet.DataLen = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-                        packet.Data = br.ReadBytes((int)(count - br.BaseStream.Position));
+                var br = new SpanReader(buffer);
+                packet = new EapolKey();
+                packet.KeyDescriptorType = br.ReadByte();
+                packet.KeyInformation = br.ReadUInt16BigEndian();
+                packet.KeyLength = br.ReadUInt16BigEndian();
+                packet.ReplayCounter = br.ReadBytes(8);
+                packet.Nonce = br.ReadBytes(32);
+                packet.IV = br.ReadBytes(16);
+                packet.RSC = br.ReadBytes(8);
+                packet.ID = br.ReadBytes(8);
+                packet.MIC = br.ReadBytes(16);
+                packet.DataLen = br.ReadUInt16BigEndian();
+                packet.Data = br.ReadBytes((int)(buffer.Length - br.Position));
 
-                        return true;
-                    }
-                }
+                return true;
+
             }
             catch (Exception)
             {

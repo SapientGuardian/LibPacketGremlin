@@ -9,7 +9,6 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
     using System;
     using System.IO;
     using System.Text;
-
     using OutbreakLabs.LibPacketGremlin.Abstractions;
     using OutbreakLabs.LibPacketGremlin.Packets.IEEE802_1xSupport;
     using OutbreakLabs.LibPacketGremlin.Utilities;
@@ -149,68 +148,55 @@ namespace OutbreakLabs.LibPacketGremlin.Packets
         /// </summary>
         /// <param name="buffer">Raw data to parse</param>
         /// <param name="packet">Parsed packet</param>
-        /// <param name="count">The length of the packet in bytes</param>
-        /// <param name="index">The index into the buffer at which the packet begins</param>
         /// <returns>True if parsing was successful, false if it is not.</returns>
-        internal static bool TryParse(byte[] buffer, int index, int count, out IEEE802_1x packet)
+        internal static bool TryParse(ReadOnlySpan<byte> buffer, out IEEE802_1x packet)
         {
             try
             {
-                if (count < MinimumParseableBytes)
+                if (buffer.Length < MinimumParseableBytes)
                 {
                     packet = null;
                     return false;
                 }
 
-                using (var ms = new MemoryStream(buffer, index, count, false))
+                var br = new SpanReader(buffer);
+                var version = br.ReadByte();
+                var type = br.ReadByte();
+                var bodyLength = br.ReadUInt16BigEndian();
+
+                var payloadLength = Math.Min(bodyLength, (int)(buffer.Length - br.Position));
+
+                packet = null;
+                var payloadBytes = br.Slice(payloadLength);
+
+                switch (type)
                 {
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var version = br.ReadByte();
-                        var type = br.ReadByte();
-                        var bodyLength = ByteOrder.NetworkToHostOrder(br.ReadUInt16());
-
-                        var payloadLength = Math.Min(bodyLength, (int)(count - br.BaseStream.Position));
-
-                        packet = null;
-
-                        switch (type)
+                    case (byte)Types.EAPOL_KEY:
                         {
-                            case (byte)Types.EAPOL_KEY:
-                                {
-                                    EapolKey payload;
-                                    if (EapolKey.TryParse(
-                                        buffer,
-                                        index + (int)br.BaseStream.Position,
-                                        payloadLength,
-                                        out payload))
-                                    {
-                                        packet = new IEEE802_1x<EapolKey> { Payload = payload };
-                                    }
-                                }
-                                break;
+                            EapolKey payload;
+                            if (EapolKey.TryParse(payloadBytes, out payload))
+                            {
+                                packet = new IEEE802_1x<EapolKey> { Payload = payload };
+                            }
                         }
-
-                        if (packet == null)
-                        {
-                            Generic payload;
-                            Generic.TryParse(
-                                buffer,
-                                index + (int)br.BaseStream.Position,
-                                (int)(count - br.BaseStream.Position),
-                                out payload);
-
-                            // This can never fail, so I'm not checking the output
-                            packet = new IEEE802_1x<Generic> { Payload = payload };
-                        }
-
-                        packet.Version = version;
-                        packet.Type = type;
-                        packet.BodyLength = bodyLength;
-
-                        return true;
-                    }
+                        break;
                 }
+
+                if (packet == null)
+                {
+                    Generic payload;
+                    Generic.TryParse(payloadBytes, out payload);
+
+                    // This can never fail, so I'm not checking the output
+                    packet = new IEEE802_1x<Generic> { Payload = payload };
+                }
+
+                packet.Version = version;
+                packet.Type = type;
+                packet.BodyLength = bodyLength;
+
+                return true;
+
             }
             catch (Exception)
             {
